@@ -13,7 +13,7 @@
         android:allowBackup="false"
         android:icon="@drawable/ic_viper"
         android:label="ViperBrowser"
-        android:theme="@style/AppTheme"
+        android:theme="@style/Theme.ViperBrowser"
         android:usesCleartextTraffic="false">
 
         <activity
