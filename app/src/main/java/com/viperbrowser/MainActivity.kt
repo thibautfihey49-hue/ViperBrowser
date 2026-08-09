@@ -48,7 +48,6 @@ class MainActivity : AppCompatActivity() {
             useWideViewPort = true
             loadWithOverviewMode = true
             layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
-            enableSmoothTransition = false
         }
 
         // ⚡ ACCÉLÉRATION MATÉRIELLE OBLIGATOIRE
@@ -58,12 +57,6 @@ class MainActivity : AppCompatActivity() {
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(vue: WebView?, url: String?) {
                 url?.let { urlInput.setText(it) }
-            }
-
-            // ⚡ CHARGEMENT INSTANTANÉ — pas de surcharge
-            override fun shouldOverrideUrlLoading(vue: WebView?, url: String?): Boolean {
-                url?.let { vue?.loadUrl(it) }
-                return true
             }
         }
     }
@@ -90,22 +83,16 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl(urlFinal)
     }
 
-    // ⚡ RETOUR ARRIÈRE RAPIDE
     override fun onBackPressed() {
-        if (webView.canGoBack()) {
-            webView.goBack()
-        } else {
-            super.onBackPressed()
-        }
+        if (webView.canGoBack()) webView.goBack()
+        else super.onBackPressed()
     }
 
-    // ⚡ LIBÉRER MÉMOIRE EN PAUSE
     override fun onPause() {
         webView.onPause()
         super.onPause()
     }
 
-    // ⚡ REPRISE INSTANTANÉE
     override fun onResume() {
         super.onResume()
         webView.onResume()
