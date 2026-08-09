@@ -34,7 +34,6 @@ class MainActivity : AppCompatActivity() {
         configurerSecurite()
         configurerBouton()
 
-        // Page vide au démarrage = lancement instantané
         urlInput.setText("")
         webView.loadUrl("about:blank")
     }
@@ -42,7 +41,6 @@ class MainActivity : AppCompatActivity() {
     private fun configurerWebView() {
         val reglages = webView.settings
 
-        // ⚡ CACHE EN PREMIER — RÉSEAU SI ABSOLUMENT NÉCESSAIRE
         reglages.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         reglages.domStorageEnabled = true
         reglages.databaseEnabled = false
@@ -66,18 +64,13 @@ class MainActivity : AppCompatActivity() {
             reglages.setGeolocationEnabled(false)
         }
 
-        // ⚡ ACCÉLÉRATION GRAPHIQUE + CORRECTIONS XIAOMI/MIUI
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
 
-        // 🛡️ CORRECTIONS SPÉCIALES XIAOMI/MIUI via AndroidX WebKit
         if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
             WebSettingsCompat.setForceDark(reglages, WebSettingsCompat.FORCE_DARK_OFF)
-        }
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.ENABLE_SUPERSET_FILE_SCHEME)) {
-            // Améliore la compatibilité et la vitesse
         }
     }
 
@@ -115,7 +108,6 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() { webView.clearCache(true); webView.destroy(); super.onDestroy() }
 
     private inner class ClientWeb : WebViewClient() {
-        // 🚫 70+ DOMAINES PUB/PISTAGE BLOQUÉS AVANT TÉLÉCHARGEMENT
         private val BLOQUER = listOf(
             "doubleclick.net", "googleadservices.com", "googlesyndication.com",
             "googletagmanager.com", "amazon-adsystem.com", "adform.net",
