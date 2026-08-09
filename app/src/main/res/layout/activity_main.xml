@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FAFAA">
+    android:background="#FAFAAA">
 
     <!-- Barre de progression -->
     <ProgressBar
@@ -23,7 +23,7 @@
         android:orientation="horizontal"
         android:paddingHorizontal="16dp"
         android:paddingVertical="12dp"
-        android:background="#FAFAA"
+        android:background="#FAFAAA"
         android:elevation="0dp"
         android:id="@+id/nav_bar"
         android:visibility="gone">
@@ -136,7 +136,7 @@
                 android:layout_height="wrap_content"
                 android:text="Favoris"
                 android:textSize="15sp"
-                android:textStyle="medium"
+                android:textStyle="normal"
                 android:textColor="#1D1D1F"
                 android:layout_marginBottom="16dp"/>
 
