@@ -18,13 +18,15 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - name: Rendre gradlew exécutable
-        run: chmod +x gradlew
+      - name: Installer Gradle 8.2
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.2'
 
       - name: Compiler l'APK
-        run: ./gradlew assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon
 
-      - name: Télécharger l'APK
+      - name: Récupérer l'APK
         uses: actions/upload-artifact@v4
         with:
           name: ViperBrowser-APK
