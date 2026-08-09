@@ -3,37 +3,46 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#FFFFFF">
+    android:background="#F8F9FA">
 
+    <!-- BARRE URL OPTIMISÉE -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="8dp"
-        android:background="#F5F5F5">
+        android:padding="6dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
 
         <EditText
             android:id="@+id/urlInput"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="42dp"
             android:layout_weight="1"
-            android:hint="URL..."
-            android:inputType="textUri"
-            android:textSize="14sp"
-            android:padding="10dp"
-            android:background="#FFFFFF"
-            android:singleLine="true"/>
+            android:hint="Rechercher ou URL..."
+            android:inputType="textUri|textNoSuggestions"
+            android:imeOptions="actionGo"
+            android:singleLine="true"
+            android:textSize="15sp"
+            android:paddingStart="14dp"
+            android:paddingEnd="8dp"
+            android:background="#F1F3F4"
+            android:textColor="#202124"
+            android:textColorHint="#80868B"/>
 
         <Button
             android:id="@+id/goButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="→"
-            android:backgroundTint="#2196F3"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="➜"
+            android:textSize="16sp"
             android:textColor="#FFFFFF"
-            android:layout_marginStart="8dp"/>
+            android:backgroundTint="#2196F3"
+            android:layout_marginStart="6dp"
+            android:padding="0dp"/>
     </LinearLayout>
 
+    <!-- WEBVIEW FLUIDE -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
