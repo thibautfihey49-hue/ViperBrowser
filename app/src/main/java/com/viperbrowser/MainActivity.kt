@@ -25,36 +25,16 @@ class MainActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val isCharging = AtomicBoolean(false)
 
-    // 🚫 LISTE COMPLÈTE : PUBLICITÉ + PISTAGE + ANALYTIQUE + SOCIAL
+    // 🚫 LISTE PUBLICITÉ + PISTAGE
     private val HOSTS_BLOQUES = setOf(
         "doubleclick.net", "googleadservices.com", "googlesyndication.com",
         "googletagmanager.com", "googletagservices.com", "adservice.google",
         "amazon-adsystem.com", "adform.net", "adroll.com", "quantserve.com",
         "scorecardresearch.com", "chartbeat.com", "hotjar.com", "mouseflow.com",
         "segment.io", "segment.com", "mixpanel.com", "amplitude.com",
-        "analytics.google.com", "google-analytics.com", "ga.", "gtag.",
-        "facebook.com/tr", "connect.facebook.net", "pixel.", "fbcdn.net",
-        "twitter.com/i/ads", "ads.x.com", "linkedin.com/ads",
-        "beacon.", "tracking.", "track.", "stat.", "pixel.", "metrics.",
-        "telemetry.", "crashlytics.", "firebase-config.", "app-measurement.",
-        "csi.gstatic.com", "clients4.google.com", "translate.googleapis.com"
+        "analytics.google.com", "google-analytics.com", "pixel.", "beacon.",
+        "tracking.", "track.", "stat.", "metrics.", "telemetry."
     )
-
-    private val SCRIPTS_NETTOYAGE = """
-        (function(){
-            'use strict';
-            // Supprimer TOUS les scripts pistage
-            const motifs = ['analytics','gtag','ga(', 'fbq','pixel','beacon','track','stat','ad','adsbygoogle'];
-            document.querySelectorAll('script, img, iframe, link').forEach(e => {
-                const src = e.src || e.href || '';
-                if (motifs.some(m => src.includes(m) || e.innerText?.includes(m))) e.remove();
-            });
-            // Désactiver événements pistage
-            delete window.ga; delete window.gtag; delete window.fbq;
-            // Supprimer les cookies tiers
-            document.cookie = '*=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + location.hostname;
-        })();
-    """.trimIndent()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -71,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         chargerUrl("https://www.google.com")
     }
 
-    // ⚡ VITESSE MAXIMALE — TOUS LES PARAMÈTRES
+    // ⚡ VITESSE MAX
     private fun configurerVITESSE_MAX() {
         webView.settings.apply {
             javaScriptEnabled = true
@@ -87,17 +67,12 @@ class MainActivity : AppCompatActivity() {
             useWideViewPort = true
             loadWithOverviewMode = true
             layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
-            minimumFontSize = 12
-            minimumLogicalFontSize = 12
 
             allowFileAccess = false
             allowContentAccess = false
             databaseEnabled = false
-            geolocationEnabled = false
             setNeedInitialFocus(false)
             savePassword = false
-            setAllowUniversalAccessFromFileURLs(false)
-            setAllowFileAccessFromFileURLs(false)
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
@@ -110,30 +85,29 @@ class MainActivity : AppCompatActivity() {
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.isDrawingCacheEnabled = true
         webView.setInitialScale(100)
-        webView.fastScrollEnabled = true
         webView.overScrollMode = WebView.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
     }
 
-    // 🔒 SÉCURITÉ ABSOLUE — BLOQUAGE + NETTOYAGE + ISOLATION
+    // 🔒 SÉCURITÉ ABSOLUE
     private fun configurerSECURITE_ABSOLUE() {
         val cookies = CookieManager.getInstance()
         cookies.setAcceptThirdPartyCookies(webView, false)
         cookies.acceptCookie() = true
-        cookies.removeAllCookies(null) { }
+        // ✅ removeAllCookies attend UN SEUL paramètre : callback ou null
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            cookies.removeAllCookies(null)
+        }
         cookies.flush()
 
         webView.clearCache(true)
         webView.clearHistory()
         webView.clearFormData()
-        webView.clearSslPreferences()
 
         webView.webViewClient = object : WebViewClient() {
-
             override fun shouldInterceptRequest(vue: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
                 val url = rq?.url.toString().lowercase()
-                // 🚫 BLOQUER TOUT CE QUI EST DANS LA LISTE
                 for (hote in HOSTS_BLOQUES) {
                     if (url.contains(hote)) {
                         return WebResourceResponse("text/plain", "UTF-8",
@@ -152,20 +126,9 @@ class MainActivity : AppCompatActivity() {
                 return true
             }
 
-            override fun onPageStarted(vue: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
-                url?.let { urlInput.setText(it) }
-                super.onPageStarted(vue, url, favicon)
-            }
-
             override fun onPageFinished(vue: WebView?, url: String?) {
                 isCharging.set(false)
-                // 🔒 NETTOYER LA PAGE APRÈS CHARGEMENT
-                handler.postDelayed({ vue?.evaluateJavascript(SCRIPTS_NETTOYAGE, null) }, 150)
-                super.onPageFinished(vue, url)
-            }
-
-            override fun onReceivedError(vue: WebView?, code: Int, desc: String?, url: String?) {
-                super.onReceivedError(vue, code, desc, url)
+                url?.let { urlInput.setText(it) }
             }
         }
     }
@@ -213,7 +176,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         webView.clearCache(true)
         webView.clearHistory()
-        CookieManager.getInstance().removeAllCookies(null) { }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            CookieManager.getInstance().removeAllCookies(null)
+        }
         handler.removeCallbacksAndMessages(null)
         webView.destroy()
         super.onDestroy()
