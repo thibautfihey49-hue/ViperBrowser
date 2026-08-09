@@ -25,15 +25,12 @@ class MainActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val isCharging = AtomicBoolean(false)
 
-    // 🚫 LISTE PUBLICITÉ + PISTAGE
     private val HOSTS_BLOQUES = setOf(
         "doubleclick.net", "googleadservices.com", "googlesyndication.com",
-        "googletagmanager.com", "googletagservices.com", "adservice.google",
-        "amazon-adsystem.com", "adform.net", "adroll.com", "quantserve.com",
-        "scorecardresearch.com", "chartbeat.com", "hotjar.com", "mouseflow.com",
-        "segment.io", "segment.com", "mixpanel.com", "amplitude.com",
-        "analytics.google.com", "google-analytics.com", "pixel.", "beacon.",
-        "tracking.", "track.", "stat.", "metrics.", "telemetry."
+        "googletagmanager.com", "adservice.google", "amazon-adsystem.com",
+        "adroll.com", "quantserve.com", "chartbeat.com", "hotjar.com",
+        "segment.com", "mixpanel.com", "google-analytics.com",
+        "pixel.", "beacon.", "tracking.", "stat.", "telemetry."
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,7 +48,6 @@ class MainActivity : AppCompatActivity() {
         chargerUrl("https://www.google.com")
     }
 
-    // ⚡ VITESSE MAX
     private fun configurerVITESSE_MAX() {
         webView.settings.apply {
             javaScriptEnabled = true
@@ -90,16 +86,10 @@ class MainActivity : AppCompatActivity() {
         webView.isVerticalScrollBarEnabled = false
     }
 
-    // 🔒 SÉCURITÉ ABSOLUE
     private fun configurerSECURITE_ABSOLUE() {
         val cookies = CookieManager.getInstance()
         cookies.setAcceptThirdPartyCookies(webView, false)
         cookies.acceptCookie() = true
-        // ✅ removeAllCookies attend UN SEUL paramètre : callback ou null
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            cookies.removeAllCookies(null)
-        }
-        cookies.flush()
 
         webView.clearCache(true)
         webView.clearHistory()
@@ -176,8 +166,9 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         webView.clearCache(true)
         webView.clearHistory()
+        val cookies = CookieManager.getInstance()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            CookieManager.getInstance().removeAllCookies(null)
+            cookies.removeAllCookies(null)
         }
         handler.removeCallbacksAndMessages(null)
         webView.destroy()
