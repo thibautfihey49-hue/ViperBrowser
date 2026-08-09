@@ -2,7 +2,6 @@ package com.viperbrowser
 
 import android.os.Bundle
 import android.os.Build
-import android.widget.Toast
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -13,7 +12,6 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.webkit.WebViewFeature
 import java.io.ByteArrayInputStream
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -25,39 +23,19 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        // 🛡️ VÉRIFICATION CRITIQUE : WebView disponible ?
-        if (!estWebViewDisponible()) {
-            Toast.makeText(this, "WebView requis — installez Android System WebView", Toast.LENGTH_LONG).show()
-            finish()
-            return
-        }
-
         setContentView(R.layout.activity_main)
 
         urlInput = findViewById(R.id.urlInput)
         webView = findViewById(R.id.webView)
 
-        try {
-            configurerWebViewSUR()
-            configurerBouton()
-            urlInput.setText("")
-            webView.loadUrl("about:blank")
-        } catch (e: Exception) {
-            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
-        }
+        configurerWebView()
+        configurerBouton()
+
+        urlInput.setText("")
+        webView.loadUrl("about:blank")
     }
 
-    private fun estWebViewDisponible(): Boolean {
-        return try {
-            WebView(this)
-            true
-        } catch (e: Exception) {
-            false
-        }
-    }
-
-    private fun configurerWebViewSUR() {
+    private fun configurerWebView() {
         val r = webView.settings
 
         r.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
@@ -85,11 +63,6 @@ class MainActivity : AppCompatActivity() {
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
-
-        // ✅ Vérifier AndroidX WebKit avant de l'utiliser
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-            // Désactivé pour éviter crash sur Xiaomi
-        }
 
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
         webView.webViewClient = ClientWeb()

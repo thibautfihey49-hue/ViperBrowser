@@ -37,6 +37,5 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    // ✅ SEULE DÉPENDANCE VALIDE : AndroidX WebKit
-    implementation("androidx.webkit:webkit:1.8.0")
+    // ✅ PLUS DE androidx.webkit — C'EST ÇA QUI FAISAIT CRASHER XIAOMI
 }

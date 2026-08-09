@@ -17,7 +17,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="URL ou recherche..."
+            android:hint="URL..."
             android:inputType="textUri"
             android:textSize="14sp"
             android:padding="10dp"
