@@ -33,7 +33,8 @@ android {
 }
 
 dependencies {
-    // ✅ 100% ANDROIDX — AUCUN MÉLANGE
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
+    // ✅ Bibliothèque Material3 → fournit le thème
+    implementation("com.google.android.material:material:1.11.0")
 }
