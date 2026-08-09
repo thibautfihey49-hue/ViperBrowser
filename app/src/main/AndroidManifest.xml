@@ -10,7 +10,6 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
         android:label="ViperBrowser"
         android:theme="@style/Theme.ViperBrowser"
         android:usesCleartextTraffic="true">
