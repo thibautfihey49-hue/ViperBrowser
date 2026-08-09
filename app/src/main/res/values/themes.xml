@@ -23,3 +23,10 @@
         <item name="android:navigationBarColor">@color/viper_surface</item>
     </style>
 </resources>
+
+    <!-- Thème de secours pour compatibilité Android -->
+    <style name="Theme.ViperBrowser" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/viper_primary</item>
+        <item name="android:statusBarColor">@color/viper_primary</item>
+        <item name="android:windowBackground">@color/viper_background</item>
+    </style>
