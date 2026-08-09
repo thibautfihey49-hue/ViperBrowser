@@ -2,6 +2,7 @@ package com.viperbrowser
 
 import android.os.Bundle
 import android.os.Build
+import android.widget.Toast
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -12,7 +13,6 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import java.io.ByteArrayInputStream
 import java.util.concurrent.atomic.AtomicBoolean
@@ -25,47 +25,85 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // 🛡️ VÉRIFICATION CRITIQUE : WebView disponible ?
+        if (!estWebViewDisponible()) {
+            Toast.makeText(this, "WebView requis — installez Android System WebView", Toast.LENGTH_LONG).show()
+            finish()
+            return
+        }
+
         setContentView(R.layout.activity_main)
+
         urlInput = findViewById(R.id.urlInput)
         webView = findViewById(R.id.webView)
-        configurerMAX()
-        configurerBouton()
-        urlInput.setText("")
-        webView.loadUrl("about:blank")
+
+        try {
+            configurerWebViewSUR()
+            configurerBouton()
+            urlInput.setText("")
+            webView.loadUrl("about:blank")
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+        }
     }
 
-    private fun configurerMAX() {
+    private fun estWebViewDisponible(): Boolean {
+        return try {
+            WebView(this)
+            true
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    private fun configurerWebViewSUR() {
         val r = webView.settings
+
         r.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         r.domStorageEnabled = true
-        r.databaseEnabled = false
         r.javaScriptEnabled = true
         r.loadsImagesAutomatically = true
         r.defaultTextEncodingName = "UTF-8"
+
         r.useWideViewPort = true
         r.loadWithOverviewMode = true
         r.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
         r.minimumFontSize = 8
+
         r.setSupportZoom(true)
         r.builtInZoomControls = true
         r.displayZoomControls = false
+
         r.allowFileAccess = false
         r.allowContentAccess = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) r.setGeolocationEnabled(false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            r.setGeolocationEnabled(false)
+        }
+
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK))
-            WebSettingsCompat.setForceDark(r, WebSettingsCompat.FORCE_DARK_OFF)
+
+        // ✅ Vérifier AndroidX WebKit avant de l'utiliser
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+            // Désactivé pour éviter crash sur Xiaomi
+        }
+
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
-        webView.webViewClient = Client()
+        webView.webViewClient = ClientWeb()
     }
 
     private fun configurerBouton() {
-        findViewById<Button>(R.id.goButton).setOnClickListener { if (!enChargement.get()) chargerUrl() }
+        findViewById<Button>(R.id.goButton).setOnClickListener {
+            if (!enChargement.get()) chargerUrl()
+        }
         urlInput.setOnKeyListener { _, c, _ ->
-            if (c == android.view.KeyEvent.KEYCODE_ENTER && !enChargement.get()) { chargerUrl(); true } else false
+            if (c == android.view.KeyEvent.KEYCODE_ENTER && !enChargement.get()) {
+                chargerUrl()
+                true
+            } else false
         }
     }
 
@@ -84,7 +122,7 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() { super.onResume(); webView.onResume() }
     override fun onDestroy() { webView.clearCache(true); webView.destroy(); super.onDestroy() }
 
-    private inner class Client : WebViewClient() {
+    private inner class ClientWeb : WebViewClient() {
         private val BLOQUER = listOf(
             "doubleclick.net", "googleadservices.com", "googlesyndication.com",
             "googletagmanager.com", "amazon-adsystem.com", "adform.net",
