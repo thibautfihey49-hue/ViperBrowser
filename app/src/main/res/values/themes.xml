@@ -21,13 +21,5 @@
 
         <item name="android:statusBarColor">@color/viper_primary</item>
         <item name="android:navigationBarColor">@color/viper_surface</item>
-
-        <item name="shapeCornerFamily">rounded</item>
-        <item name="shapeAppearanceCornerSmall">20dp</item>
-        <item name="shapeAppearanceCornerMedium">24dp</item>
-        <item name="shapeAppearanceCornerLarge">32dp</item>
-
-        <item name="elevationOverlayEnabled">true</item>
-        <item name="android:windowContentOverlay">@null</item>
     </style>
 </resources>
