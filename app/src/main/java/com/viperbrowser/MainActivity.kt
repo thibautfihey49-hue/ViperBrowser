@@ -1,12 +1,8 @@
 package com.viperbrowser
 
 import android.os.Bundle
-import android.os.Build
-import android.os.Handler
-import android.os.Looper
 import android.view.KeyEvent
 import android.webkit.CookieManager
-import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
@@ -16,22 +12,11 @@ import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
 import java.io.ByteArrayInputStream
-import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var webView: WebView
     private lateinit var urlInput: EditText
-    private val handler = Handler(Looper.getMainLooper())
-    private val isCharging = AtomicBoolean(false)
-
-    private val HOSTS_BLOQUES = setOf(
-        "doubleclick.net", "googleadservices.com", "googlesyndication.com",
-        "googletagmanager.com", "adservice.google", "amazon-adsystem.com",
-        "adroll.com", "quantserve.com", "chartbeat.com", "hotjar.com",
-        "segment.com", "mixpanel.com", "google-analytics.com",
-        "pixel.", "beacon.", "tracking.", "stat.", "telemetry."
-    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,138 +25,107 @@ class MainActivity : AppCompatActivity() {
         urlInput = findViewById(R.id.urlInput)
         webView = findViewById(R.id.webView)
 
-        configurerVITESSE_MAX()
-        configurerSECURITE_ABSOLUE()
+        configurerWebView()
+        configurerSecurite()
         configurerBouton()
 
         urlInput.setText("google.com")
-        chargerUrl("https://www.google.com")
+        webView.loadUrl("https://www.google.com")
     }
 
-    private fun configurerVITESSE_MAX() {
-        webView.settings.apply {
-            javaScriptEnabled = true
-            domStorageEnabled = true
-            cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-            loadsImagesAutomatically = true
-            blockNetworkImage = false
-            mediaPlaybackRequiresUserGesture = false
-            setSupportZoom(true)
-            builtInZoomControls = true
-            displayZoomControls = false
-
-            useWideViewPort = true
-            loadWithOverviewMode = true
-            layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
-
-            allowFileAccess = false
-            allowContentAccess = false
-            databaseEnabled = false
-            setNeedInitialFocus(false)
-            savePassword = false
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                mixedContentMode = WebSettings.MIXED_CONTENT_NEVER_ALLOW
-            }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                safeBrowsingEnabled = true
-            }
-        }
-
+    private fun configurerWebView() {
+        val reglages = webView.settings
+        reglages.javaScriptEnabled = true
+        reglages.domStorageEnabled = true
+        reglages.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+        reglages.loadsImagesAutomatically = true
+        reglages.setSupportZoom(true)
+        reglages.builtInZoomControls = true
+        reglages.displayZoomControls = false
+        reglages.useWideViewPort = true
+        reglages.loadWithOverviewMode = true
+        reglages.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
+        reglages.allowFileAccess = false
+        reglages.allowContentAccess = false
+        reglages.databaseEnabled = false
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
-        webView.isDrawingCacheEnabled = true
-        webView.setInitialScale(100)
-        webView.overScrollMode = WebView.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
     }
 
-    private fun configurerSECURITE_ABSOLUE() {
+    private fun configurerSecurite() {
         val cookies = CookieManager.getInstance()
         cookies.setAcceptThirdPartyCookies(webView, false)
-        cookies.acceptCookie() = true
-
-        webView.clearCache(true)
-        webView.clearHistory()
-        webView.clearFormData()
-
-        webView.webViewClient = object : WebViewClient() {
-            override fun shouldInterceptRequest(vue: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
-                val url = rq?.url.toString().lowercase()
-                for (hote in HOSTS_BLOQUES) {
-                    if (url.contains(hote)) {
-                        return WebResourceResponse("text/plain", "UTF-8",
-                            ByteArrayInputStream("".toByteArray()))
-                    }
-                }
-                return super.shouldInterceptRequest(vue, rq)
-            }
-
-            override fun shouldOverrideUrlLoading(vue: WebView?, rq: WebResourceRequest?): Boolean {
-                val url = rq?.url.toString()
-                if (url.startsWith("http://") || url.startsWith("https://")) {
-                    vue?.loadUrl(url)
-                    isCharging.set(true)
-                }
-                return true
-            }
-
-            override fun onPageFinished(vue: WebView?, url: String?) {
-                isCharging.set(false)
-                url?.let { urlInput.setText(it) }
-            }
-        }
+        webView.webViewClient = MonClientWeb()
     }
 
     private fun configurerBouton() {
-        findViewById<Button>(R.id.goButton).setOnClickListener {
-            val url = urlInput.text.toString().trim()
-            if (url.isNotEmpty()) chargerUrl(url)
+        val bouton = findViewById<Button>(R.id.goButton)
+        bouton.setOnClickListener {
+            var url = urlInput.text.toString().trim()
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "https://$url"
+            }
+            webView.loadUrl(url)
         }
         urlInput.setOnKeyListener { _, code, _ ->
             if (code == KeyEvent.KEYCODE_ENTER) {
-                val url = urlInput.text.toString().trim()
-                if (url.isNotEmpty()) chargerUrl(url)
+                var url = urlInput.text.toString().trim()
+                if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                    url = "https://$url"
+                }
+                webView.loadUrl(url)
                 true
-            } else false
+            } else {
+                false
+            }
         }
-    }
-
-    private fun chargerUrl(url: String) {
-        var urlFinal = url
-        if (!URLUtil.isValidUrl(urlFinal)) {
-            urlFinal = "https://${urlFinal.replace(" ", "+")}"
-        }
-        webView.loadUrl(urlFinal)
     }
 
     override fun onBackPressed() {
-        if (isCharging.get()) return
-        if (webView.canGoBack()) webView.goBack()
-        else super.onBackPressed()
-    }
-
-    override fun onPause() {
-        webView.onPause()
-        webView.clearCache(false)
-        handler.removeCallbacksAndMessages(null)
-        super.onPause()
-    }
-
-    override fun onResume() {
-        super.onResume()
-        webView.onResume()
+        if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
     }
 
     override fun onDestroy() {
         webView.clearCache(true)
         webView.clearHistory()
-        val cookies = CookieManager.getInstance()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            cookies.removeAllCookies(null)
-        }
-        handler.removeCallbacksAndMessages(null)
-        webView.destroy()
         super.onDestroy()
+    }
+
+    private inner class MonClientWeb : WebViewClient() {
+        private val BLOQUER = listOf(
+            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
+            "googletagmanager.com", "google-analytics.com", "hotjar.com",
+            "segment.com", "mixpanel.com", "pixel.", "beacon.", "tracking."
+        )
+
+        override fun shouldInterceptRequest(vue: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
+            val url = rq?.url.toString().lowercase()
+            for (nom in BLOQUER) {
+                if (url.contains(nom)) {
+                    return WebResourceResponse("text/plain", "UTF-8",
+                        ByteArrayInputStream("".toByteArray()))
+                }
+            }
+            return super.shouldInterceptRequest(vue, rq)
+        }
+
+        override fun shouldOverrideUrlLoading(vue: WebView?, rq: WebResourceRequest?): Boolean {
+            val url = rq?.url.toString()
+            if (url.startsWith("http://") || url.startsWith("https://")) {
+                vue?.loadUrl(url)
+            }
+            return true
+        }
+
+        override fun onPageFinished(vue: WebView?, url: String?) {
+            if (url != null) {
+                urlInput.setText(url)
+            }
+        }
     }
 }
