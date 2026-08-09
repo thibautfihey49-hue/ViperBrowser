@@ -2,35 +2,36 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:background="#FFFFFF">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:background="#6366F1">
+        android:background="#F5F5F5">
 
         <EditText
             android:id="@+id/urlInput"
             android:layout_width="0dp"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:hint="Entrez une URL..."
-            android:background="#FFFFFF"
-            android:paddingHorizontal="12dp"
+            android:hint="URL ou recherche..."
             android:inputType="textUri"
-            android:textSize="14sp"/>
+            android:textSize="14sp"
+            android:padding="10dp"
+            android:background="#FFFFFF"
+            android:singleLine="true"/>
 
         <Button
             android:id="@+id/goButton"
             android:layout_width="wrap_content"
-            android:layout_height="40dp"
+            android:layout_height="wrap_content"
             android:text="→"
-            android:layout_marginStart="8dp"
-            android:backgroundTint="#FFFFFF"
-            android:textColor="#6366F1"
-            android:minWidth="48dp"/>
+            android:backgroundTint="#2196F3"
+            android:textColor="#FFFFFF"
+            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
     <WebView

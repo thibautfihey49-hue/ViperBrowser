@@ -1,9 +1,7 @@
 package com.viperbrowser
 
 import android.os.Bundle
-import android.os.Build
 import android.view.KeyEvent
-import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
@@ -13,8 +11,6 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
-import androidx.webkit.WebSettingsCompat
-import androidx.webkit.WebViewFeature
 import java.io.ByteArrayInputStream
 
 class MainActivity : AppCompatActivity() {
@@ -30,25 +26,27 @@ class MainActivity : AppCompatActivity() {
         urlInput = findViewById(R.id.urlInput)
         webView = findViewById(R.id.webView)
 
-        configurerWebView()
-        configurerSecurite()
+        configurerChromiumMAX()
+        configurerBlocagePublicite()
         configurerBouton()
 
+        // Page vide = lancement instantané
         urlInput.setText("")
         webView.loadUrl("about:blank")
     }
 
-    private fun configurerWebView() {
+    private fun configurerChromiumMAX() {
         val reglages = webView.settings
 
+        // ⚡ CACHE MAXIMUM
         reglages.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         reglages.domStorageEnabled = true
-        reglages.databaseEnabled = false
-
+        reglages.databaseEnabled = true
         reglages.javaScriptEnabled = true
         reglages.loadsImagesAutomatically = true
         reglages.defaultTextEncodingName = "UTF-8"
 
+        // ⚡ MISE EN PAGE RAPIDE
         reglages.useWideViewPort = true
         reglages.loadWithOverviewMode = true
         reglages.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
@@ -58,25 +56,20 @@ class MainActivity : AppCompatActivity() {
         reglages.builtInZoomControls = true
         reglages.displayZoomControls = false
 
+        // ⚡ COUPER CE QUI RALENTIT
         reglages.allowFileAccess = false
         reglages.allowContentAccess = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            reglages.setGeolocationEnabled(false)
-        }
+        reglages.setGeolocationEnabled(false)
 
+        // ⚡ ACCÉLÉRATION GRAPHIQUE MAX
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
-
-        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
-            WebSettingsCompat.setForceDark(reglages, WebSettingsCompat.FORCE_DARK_OFF)
-        }
     }
 
-    private fun configurerSecurite() {
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
-        webView.webViewClient = ClientWeb()
+    private fun configurerBlocagePublicite() {
+        webView.webViewClient = ClientChromium()
     }
 
     private fun configurerBouton() {
@@ -107,7 +100,8 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() { webView.onResume(); super.onResume() }
     override fun onDestroy() { webView.clearCache(true); webView.destroy(); super.onDestroy() }
 
-    private inner class ClientWeb : WebViewClient() {
+    private inner class ClientChromium : WebViewClient() {
+        // 🚫 80+ DOMAINES BLOQUÉS AU NIVEAU MOTEUR CHROMIUM
         private val BLOQUER = listOf(
             "doubleclick.net", "googleadservices.com", "googlesyndication.com",
             "googletagmanager.com", "amazon-adsystem.com", "adform.net",
@@ -124,7 +118,9 @@ class MainActivity : AppCompatActivity() {
         override fun shouldInterceptRequest(vue: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
             val url = rq?.url.toString().lowercase()
             for (nom in BLOQUER) {
-                if (url.contains(nom)) return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
+                if (url.contains(nom)) {
+                    return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
+                }
             }
             return super.shouldInterceptRequest(vue, rq)
         }

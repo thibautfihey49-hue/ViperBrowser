@@ -1,6 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.ViperBrowser" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimary">@color/purple</item>
-    </style>
+    <style name="Theme.AppCompat.Light.NoActionBar" parent="Theme.AppCompat.Light.NoActionBar"/>
 </resources>
