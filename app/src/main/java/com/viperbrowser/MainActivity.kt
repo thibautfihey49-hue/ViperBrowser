@@ -98,7 +98,7 @@ class MainActivity : Activity() {
         checkPermissions()
         setupWebViewMaxPerformance()
         setupDownloader()
-        setupDownloadReceiverSafe()  // ✅ VERSION CORRIGÉE
+        setupDownloadReceiverSafe()
         setupGestures()
 
         webView.loadUrl("https://duckduckgo.com")
@@ -227,9 +227,10 @@ class MainActivity : Activity() {
         }
     }
 
+    // ✅ SIGNATURE CORRIGÉE : 5 paramètres (url, ua, disposition, mimeType, taille)
     private fun setupDownloader() {
-        webView.setDownloadListener { url, ua, disp, mime ->
-            startDownloadMaxSpeed(url, ua, disp, mime)
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+            startDownloadMaxSpeed(url, userAgent, contentDisposition, mimeType)
         }
     }
 
@@ -261,7 +262,6 @@ class MainActivity : Activity() {
         }
     }
 
-    // ✅ CORRECTION PRINCIPALE : drapeau RECEIVER_NOT_EXPORTED
     private fun setupDownloadReceiverSafe() {
         downloadReceiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, i: Intent?) {
@@ -270,7 +270,6 @@ class MainActivity : Activity() {
             }
         }
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        // ✅ OBLIGATOIRE DEPUIS ANDROID 13 : drapeau NOT_EXPORTED
         if (Build.VERSION.SDK_INT >= 33) {
             registerReceiver(downloadReceiver, filter, RECEIVER_NOT_EXPORTED)
         } else {
