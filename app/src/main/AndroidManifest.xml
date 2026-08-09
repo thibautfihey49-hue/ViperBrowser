@@ -11,10 +11,7 @@
 
     <application
         android:allowBackup="false"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="ViperBrowser"
-        android:theme="@style/Theme.ViperBrowser"
         android:usesCleartextTraffic="true">
 
         <activity

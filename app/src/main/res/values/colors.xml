@@ -2,29 +2,6 @@
 <resources>
     <color name="white">#FFFFFF</color>
     <color name="black">#000000</color>
-
-    <color name="viper_primary">#6366F1</color>
-    <color name="viper_primary_dark">#4F46E5</color>
-    <color name="viper_on_primary">@color/white</color>
-    <color name="viper_container">#E0E7FF</color>
-
-    <color name="viper_secondary">#7C3AED</color>
-    <color name="viper_secondary_dark">#6D28D9</color>
-    <color name="viper_on_secondary">@color/white</color>
-
-    <color name="viper_accent">#EC4899</color>
-    <color name="viper_accent_soft">#FBCFE8</color>
-
-    <color name="viper_surface">#F8F9FF</color>
-    <color name="viper_surface_variant">#E7E0EC</color>
-    <color name="viper_background">@color/white</color>
-
-    <color name="viper_text">#1C1B1F</color>
-    <color name="viper_text_secondary">#49454F</color>
-    <color name="viper_text_tertiary">#79747E</color>
-
-    <color name="viper_success">#10B981</color>
-    <color name="viper_error">#EF4444</color>
-    <color name="viper_border">#E5E7EB</color>
-    <color name="accent">#EC4899</color>
+    <color name="purple">#6366F1</color>
+    <color name="pink">#EC4899</color>
 </resources>

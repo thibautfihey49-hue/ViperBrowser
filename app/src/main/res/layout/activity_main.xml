@@ -2,18 +2,29 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:background="@color/viper_background">
+    android:orientation="vertical">
 
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="✅ ViperBrowser — Cast + Détection vidéo"
-        android:textSize="16sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:padding="12dp"
-        android:textColor="@color/viper_primary"/>
+        android:orientation="horizontal"
+        android:padding="8dp">
+
+        <EditText
+            android:id="@+id/urlBar"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:hint="Rechercher ou URL"
+            android:inputType="textUri"/>
+
+        <Button
+            android:id="@+id/btnGo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="→"
+            android:layout_marginStart="8dp"/>
+    </LinearLayout>
 
     <WebView
         android:id="@+id/webView"
