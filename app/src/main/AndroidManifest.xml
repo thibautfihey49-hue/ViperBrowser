@@ -7,15 +7,20 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
+    <!-- ✅ Permissions Cast -->
+    <uses-permission android:name="com.google.android.cast.permission.CAST"/>
+    <uses-permission android:name="android.permission.INTERNET"/>
 
     <application
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:label="ViperBrowser"
         android:theme="@style/Theme.ViperBrowser"
         android:usesCleartextTraffic="true">
 
         <activity
-            android:name="com.viperbrowser.MainActivity"
+            android:name=".MainActivity"
             android:exported="true"
             android:configChanges="orientation|screenSize|keyboardHidden"
             android:launchMode="singleTop">
@@ -24,5 +29,14 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+
+        <!-- ✅ Service Cast -->
+        <service android:name=".ViperCastService"
+                 android:exported="true"
+                 android:permission="com.google.android.cast.permission.CAST_SERVICE">
+            <intent-filter>
+                <action android:name="com.google.android.cast.service.CastService"/>
+            </intent-filter>
+        </service>
     </application>
 </manifest>
