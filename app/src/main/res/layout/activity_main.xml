@@ -9,7 +9,7 @@
         android:layout_height="wrap_content"
         android:orientation="horizontal"
         android:padding="8dp"
-        android:background="@color/purple">
+        android:background="#6366F1">
 
         <EditText
             android:id="@+id/urlInput"
@@ -17,7 +17,7 @@
             android:layout_height="40dp"
             android:layout_weight="1"
             android:hint="Entrez une URL..."
-            android:background="@color/white"
+            android:background="#FFFFFF"
             android:paddingHorizontal="12dp"
             android:inputType="textUri"
             android:textSize="14sp"/>
@@ -28,8 +28,8 @@
             android:layout_height="40dp"
             android:text="→"
             android:layout_marginStart="8dp"
-            android:backgroundTint="@color/white"
-            android:textColor="@color/purple"
+            android:backgroundTint="#FFFFFF"
+            android:textColor="#6366F1"
             android:minWidth="48dp"/>
     </LinearLayout>
 

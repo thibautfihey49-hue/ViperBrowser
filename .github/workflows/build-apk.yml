@@ -24,7 +24,7 @@ jobs:
           gradle-version: '8.2'
 
       - name: Compiler l'APK
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Récupérer l'APK
         uses: actions/upload-artifact@v4

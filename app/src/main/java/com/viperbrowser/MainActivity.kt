@@ -7,7 +7,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 

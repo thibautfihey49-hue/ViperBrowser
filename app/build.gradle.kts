@@ -5,13 +5,13 @@ plugins {
 
 android {
     namespace = "com.viperbrowser"
-    compileSdk = 33
-    buildToolsVersion = "33.0.2"
+    compileSdk = 34
+    buildToolsVersion = "34.0.0"
 
     defaultConfig {
         applicationId = "com.viperbrowser"
         minSdk = 21
-        targetSdk = 33
+        targetSdk = 34
         versionCode = 1
         versionName = "1.0.0"
     }
@@ -33,6 +33,7 @@ android {
 }
 
 dependencies {
-    // ✅ BIBLIOTHÈQUE CLASSIQUE — SANS ANDROIDX
-    implementation("com.android.support:appcompat-v7:28.0.0")
+    // ✅ 100% ANDROIDX — AUCUN MÉLANGE
+    implementation("androidx.core:core-ktx:1.12.0")
+    implementation("androidx.appcompat:appcompat:1.6.1")
 }
