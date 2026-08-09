@@ -39,9 +39,8 @@ class MainActivity : AppCompatActivity() {
     private fun configurerWebView() {
         val reglages = webView.settings
 
+        // ⚡ CACHE — ACTIF SANS MÉTHODES OBSOLÈTES
         reglages.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
-        reglages.setAppCacheEnabled = true
-        reglages.appCachePath = cacheDir.absolutePath
         reglages.domStorageEnabled = true
         reglages.databaseEnabled = false
 
