@@ -3,94 +3,144 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#0F0F1A">
+    android:background="@color/fond_application">
 
+    <!-- Barre de progression ultra-fine -->
     <ProgressBar
         android:id="@+id/page_progress"
         style="?android:attr/progressBarStyleHorizontal"
         android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:progressTint="#00FFCC"
-        android:progressBackgroundTint="#1A1A2E"
+        android:layout_height="2dp"
+        android:progressTint="@color/progression"
+        android:progressBackgroundTint="@color/bordure"
         android:max="100"
         android:visibility="gone"/>
 
+    <!-- Barre supérieure -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:padding="6dp"
-        android:background="#1A1A2E">
+        android:orientation="vertical"
+        android:background="@color/fond_barre"
+        android:elevation="2dp">
 
-        <Button android:id="@+id/btn_back"
-            android:layout_width="40dp" android:layout_height="40dp"
-            android:text="◀" android:textSize="14sp"
-            android:background="#252540" android:textColor="#FFFFFF"
-            android:layout_marginEnd="2dp"/>
+        <!-- Barre d'URL et boutons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingHorizontal="12dp"
+            android:paddingVertical="10dp"
+            android:gravity="center_vertical">
 
-        <Button android:id="@+id/btn_forward"
-            android:layout_width="40dp" android:layout_height="40dp"
-            android:text="▶" android:textSize="14sp"
-            android:background="#252540" android:textColor="#FFFFFF"
-            android:layout_marginEnd="2dp"/>
+            <Button
+                android:id="@+id/btn_back"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="◀"
+                android:textSize="14sp"
+                android:textColor="@color/texte_icone"
+                android:background="@drawable/bg_btn_light"
+                android:layout_marginEnd="6dp"/>
 
-        <EditText android:id="@+id/url_bar"
-            android:layout_width="0dp" android:layout_height="40dp"
-            android:layout_weight="1"
-            android:hint="Rechercher ou entrer une URL"
-            android:textColor="#FFFFFF" android:textColorHint="#777799"
-            android:background="#252540" android:padding="8dp"
-            android:inputType="textUri" android:singleLine="true"/>
+            <Button
+                android:id="@+id/btn_forward"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="▶"
+                android:textSize="14sp"
+                android:textColor="@color/texte_icone"
+                android:background="@drawable/bg_btn_light"
+                android:layout_marginEnd="10dp"/>
 
-        <TextView android:id="@+id/statut_secure"
-            android:layout_width="wrap_content" android:layout_height="40dp"
-            android:text="🔒" android:textSize="12sp"
-            android:gravity="center" android:padding="4dp"/>
+            <EditText
+                android:id="@+id/url_bar"
+                android:layout_width="0dp"
+                android:layout_height="42dp"
+                android:layout_weight="1"
+                android:hint="Rechercher ou entrer une URL"
+                android:textColor="@color/texte_principal"
+                android:textColorHint="@color/texte_secondaire"
+                android:background="@drawable/bg_url_bar"
+                android:paddingHorizontal="16dp"
+                android:inputType="textUri"
+                android:singleLine="true"
+                android:textSize="14sp"/>
 
-        <Button android:id="@+id/btn_private"
-            android:layout_width="38dp" android:layout_height="40dp"
-            android:text="🕶️" android:textSize="14sp"
-            android:layout_marginStart="2dp"
-            android:background="#252540"/>
+            <TextView
+                android:id="@+id/statut_secure"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="🔒"
+                android:textSize="13sp"
+                android:gravity="center"
+                android:paddingHorizontal="8dp"/>
 
-        <Button android:id="@+id/btn_video"
-            android:layout_width="38dp" android:layout_height="40dp"
-            android:text="📹" android:textSize="14sp"
-            android:layout_marginStart="2dp"
-            android:background="#252540"/>
+            <Button
+                android:id="@+id/btn_private"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="🕶️"
+                android:textSize="15sp"
+                android:background="@drawable/bg_btn_light"
+                android:layout_marginStart="4dp"/>
 
-        <Button android:id="@+id/btn_cast"
-            android:layout_width="38dp" android:layout_height="40dp"
-            android:text="📺" android:textSize="14sp"
-            android:layout_marginStart="2dp"
-            android:background="#252540"/>
+            <Button
+                android:id="@+id/btn_video"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="📹"
+                android:textSize="15sp"
+                android:background="@drawable/bg_btn_light"
+                android:layout_marginStart="4dp"/>
 
-        <Button android:id="@+id/btn_dl_list"
-            android:layout_width="38dp" android:layout_height="40dp"
-            android:text="⬇" android:textSize="14sp"
-            android:layout_marginStart="2dp"
-            android:background="#252540"/>
+            <Button
+                android:id="@+id/btn_cast"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="📺"
+                android:textSize="15sp"
+                android:background="@drawable/bg_btn_light"
+                android:layout_marginStart="4dp"/>
 
-        <Button android:id="@+id/btn_go"
-            android:layout_width="46dp" android:layout_height="40dp"
-            android:text="→" android:textSize="16sp"
-            android:layout_marginStart="2dp"
-            android:background="#00FFCC" android:textColor="#000000"
-            android:textStyle="bold"/>
+            <Button
+                android:id="@+id/btn_dl_list"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:text="⬇"
+                android:textSize="15sp"
+                android:background="@drawable/bg_btn_light"
+                android:layout_marginStart="4dp"/>
+
+            <Button
+                android:id="@+id/btn_go"
+                android:layout_width="52dp"
+                android:layout_height="40dp"
+                android:text="Aller"
+                android:textSize="13sp"
+                android:textStyle="bold"
+                android:textColor="#FFFFFF"
+                android:background="@drawable/bg_btn_action"
+                android:layout_marginStart="8dp"/>
+        </LinearLayout>
     </LinearLayout>
 
-    <WebView android:id="@+id/web_view"
+    <!-- WebView -->
+    <WebView
+        android:id="@+id/web_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"/>
 
+    <!-- Barre de téléchargement -->
     <LinearLayout
         android:id="@+id/dl_status_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="6dp"
-        android:background="#252540"
+        android:padding="12dp"
+        android:background="@color/fond_barre"
+        android:elevation="4dp"
         android:visibility="gone">
 
         <LinearLayout
@@ -98,26 +148,35 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal">
 
-            <TextView android:id="@+id/dl_name"
-                android:layout_width="0dp" android:layout_height="wrap_content"
+            <TextView
+                android:id="@+id/dl_name"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Téléchargement..."
-                android:textColor="#FFFFFF"
-                android:textSize="12sp"/>
+                android:text="Téléchargement en cours..."
+                android:textColor="@color/texte_principal"
+                android:textSize="13sp"
+                android:ellipsize="end"
+                android:singleLine="true"/>
 
-            <TextView android:id="@+id/dl_speed"
-                android:layout_width="wrap_content" android:layout_height="wrap_content"
+            <TextView
+                android:id="@+id/dl_speed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:text="0 KB/s"
-                android:textColor="#00FFCC"
-                android:textSize="11sp"
+                android:textColor="@color/accent"
+                android:textSize="12sp"
+                android:textStyle="bold"
                 android:layout_marginStart="8dp"/>
         </LinearLayout>
 
-        <ProgressBar android:id="@+id/dl_progress"
+        <ProgressBar
+            android:id="@+id/dl_progress"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:layout_marginTop="4dp"
-            android:progressTint="#00FFCC"/>
+            android:layout_height="6dp"
+            android:layout_marginTop="8dp"
+            android:progressTint="@color/accent"
+            android:progressBackgroundTint="@color/bordure"/>
     </LinearLayout>
 </LinearLayout>

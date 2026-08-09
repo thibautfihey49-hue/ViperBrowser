@@ -1,2 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources><style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar"/></resources>
+<resources>
+    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/fond_application</item>
+        <item name="android:colorBackground">@color/fond_application</item>
+        <item name="android:textColorPrimary">@color/texte_principal</item>
+        <item name="android:textColorSecondary">@color/texte_secondaire</item>
+        <item name="android:colorAccent">@color/accent</item>
+        <item name="android:statusBarColor">@color/fond_barre</item>
+        <item name="android:navigationBarColor">@color/fond_barre</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
