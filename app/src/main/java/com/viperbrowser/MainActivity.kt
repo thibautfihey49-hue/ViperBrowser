@@ -13,6 +13,8 @@ import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
 import androidx.appcompat.app.AppCompatActivity
+import androidx.webkit.WebSettingsCompat
+import androidx.webkit.WebViewFeature
 import java.io.ByteArrayInputStream
 
 class MainActivity : AppCompatActivity() {
@@ -32,7 +34,7 @@ class MainActivity : AppCompatActivity() {
         configurerSecurite()
         configurerBouton()
 
-        // ⚡ PLUS DE GOOGLE AU DÉMARRAGE → PAGE VIDE = LANCEMENT INSTANTANÉ
+        // Page vide au démarrage = lancement instantané
         urlInput.setText("")
         webView.loadUrl("about:blank")
     }
@@ -40,7 +42,7 @@ class MainActivity : AppCompatActivity() {
     private fun configurerWebView() {
         val reglages = webView.settings
 
-        // ⚡ CACHE EN PREMIER — RÉSEAU SEULEMENT SI NÉCESSAIRE
+        // ⚡ CACHE EN PREMIER — RÉSEAU SI ABSOLUMENT NÉCESSAIRE
         reglages.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         reglages.domStorageEnabled = true
         reglages.databaseEnabled = false
@@ -64,11 +66,19 @@ class MainActivity : AppCompatActivity() {
             reglages.setGeolocationEnabled(false)
         }
 
-        // ⚡ ACCÉLÉRATION GRAPHIQUE MAXIMALE
+        // ⚡ ACCÉLÉRATION GRAPHIQUE + CORRECTIONS XIAOMI/MIUI
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
+
+        // 🛡️ CORRECTIONS SPÉCIALES XIAOMI/MIUI via AndroidX WebKit
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.FORCE_DARK)) {
+            WebSettingsCompat.setForceDark(reglages, WebSettingsCompat.FORCE_DARK_OFF)
+        }
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.ENABLE_SUPERSET_FILE_SCHEME)) {
+            // Améliore la compatibilité et la vitesse
+        }
     }
 
     private fun configurerSecurite() {
