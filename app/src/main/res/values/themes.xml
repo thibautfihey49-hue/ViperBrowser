@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="AppTheme" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:windowBackground">@color/fond_application</item>
-        <item name="android:colorBackground">@color/fond_application</item>
-        <item name="android:textColorPrimary">@color/texte_principal</item>
-        <item name="android:textColorSecondary">@color/texte_secondaire</item>
-        <item name="android:colorAccent">@color/accent</item>
-        <item name="android:statusBarColor">@color/fond_barre</item>
-        <item name="android:navigationBarColor">@color/fond_barre</item>
-        <item name="android:windowLightStatusBar">true</item>
+    <style name="Theme.ViperBrowser" parent="Theme.Material3.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/viper_primary</item>
+        <item name="colorOnPrimary">@color/viper_on_primary</item>
+        <item name="colorPrimaryContainer">@color/viper_container</item>
+        <item name="colorOnPrimaryContainer">@color/viper_primary_dark</item>
+        <item name="colorSecondary">@color/viper_secondary</item>
+        <item name="colorOnSecondary">@color/viper_on_secondary</item>
+        <item name="colorSecondaryContainer">@color/viper_accent_soft</item>
+        <item name="colorTertiary">@color/viper_accent</item>
+        <item name="colorOnTertiary">@color/FFFFFF</item>
+        <item name="android:windowBackground">@color/viper_background</item>
+        <item name="colorSurface">@color/viper_surface</item>
+        <item name="colorOnSurface">@color/viper_text</item>
+        <item name="colorSurfaceVariant">@color/viper_surface_variant</item>
+        <item name="colorOnSurfaceVariant">@color/viper_text_secondary</item>
+        <item name="android:statusBarColor">@color/viper_primary</item>
+        <item name="android:navigationBarColor">@color/viper_surface</item>
+        <item name="shapeCornerFamily">rounded</item>
+        <item name="shapeAppearanceCornerSmall">20dp</item>
+        <item name="shapeAppearanceCornerMedium">24dp</item>
+        <item name="shapeAppearanceCornerLarge">32dp</item>
+        <item name="elevationOverlayEnabled">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:windowAnimationStyle">@style/ThemeOverlay.Material3.Animation</item>
     </style>
 </resources>

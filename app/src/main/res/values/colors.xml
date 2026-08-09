@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Style : PURE LIGHT identique à la maquette -->
-    <color name="fond_application">#FAFAFA</color>
-    <color name="fond_barre">#FFFFFF</color>
-    <color name="fond_recherche">#F5F5F7</color>
-    <color name="fond_icones">#E8E8ED</color>
-    
-    <color name="accent">#007AFF</color>
-    <color name="texte_principal">#1D1D1F</color>
-    <color name="texte_secondaire">#86868B</color>
-    
-    <color name="bordure">#E5E5E7</color>
-    <color name="securise">#34C759</color>
-    <color name="non_securise">#FF3B30</color>
-    <color name="progression">#007AFF</color>
+    <color name="viper_primary">#6366F1</color>
+    <color name="viper_primary_dark">#4F46E5</color>
+    <color name="viper_on_primary">#FFFFFF</color>
+    <color name="viper_container">#E0E7FF</color>
+    <color name="viper_secondary">#7C3AED</color>
+    <color name="viper_secondary_dark">#6D28D9</color>
+    <color name="viper_on_secondary">#FFFFFF</color>
+    <color name="viper_accent">#EC4899</color>
+    <color name="viper_accent_soft">#FBCFE8</color>
+    <color name="viper_surface">#F8F9FF</color>
+    <color name="viper_surface_variant">#E7E0EC</color>
+    <color name="viper_background">#FFFFFF</color>
+    <color name="viper_text">#1C1B1F</color>
+    <color name="viper_text_secondary">#49454F</color>
+    <color name="viper_text_tertiary">#79747E</color>
+    <color name="viper_success">#10B981</color>
+    <color name="viper_error">#EF4444</color>
+    <color name="viper_border">#E5E7EB</color>
+    <color name="transparent">#00000000</color>
+    <color name="overlay_light">#1A000000</color>
 </resources>
