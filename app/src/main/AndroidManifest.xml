@@ -11,30 +11,15 @@
         android:networkSecurityConfig="@xml/network_security_config"
         android:theme="@style/Theme.ViperBrowser"
         android:hardwareAccelerated="true"
-        android:largeHeap="false"
-        android:icon="@android:drawable/ic_menu_search"
-        android:roundIcon="@android:drawable/ic_menu_search"
-        android:debuggable="false"
-        android:extractNativeLibs="false"
-        android:requestLegacyExternalStorage="false"
-        android:supportsRtl="false"
-        android:allowTaskReparenting="false"
-        android:backupAgent=""
-        android:hasCode="true"
-        android:icon="@android:drawable/ic_menu_search">
+        android:debuggable="false">
 
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:configChanges="orientation|screenSize|keyboardHidden|screenLayout|uiMode|smallestScreenSize"
+            android:configChanges="orientation|screenSize|keyboardHidden"
             android:theme="@style/Theme.ViperBrowser"
             android:launchMode="singleTop"
-            android:windowSoftInputMode="adjustResize"
-            android:hardwareAccelerated="true"
-            android:alwaysRetainTaskState="true"
-            android:excludeFromRecents="false"
-            android:noHistory="false"
-            android:stateNotNeeded="true">
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
