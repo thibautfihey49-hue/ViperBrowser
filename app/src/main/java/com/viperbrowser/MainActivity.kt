@@ -98,7 +98,7 @@ class MainActivity : Activity() {
         checkPermissions()
         setupWebViewMaxPerformance()
         setupDownloader()
-        setupDownloadReceiver()
+        setupDownloadReceiverSafe()  // ✅ VERSION CORRIGÉE
         setupGestures()
 
         webView.loadUrl("https://duckduckgo.com")
@@ -228,7 +228,7 @@ class MainActivity : Activity() {
     }
 
     private fun setupDownloader() {
-        webView.setDownloadListener { url, ua, disp, mime, _ ->
+        webView.setDownloadListener { url, ua, disp, mime ->
             startDownloadMaxSpeed(url, ua, disp, mime)
         }
     }
@@ -261,7 +261,8 @@ class MainActivity : Activity() {
         }
     }
 
-    private fun setupDownloadReceiver() {
+    // ✅ CORRECTION PRINCIPALE : drapeau RECEIVER_NOT_EXPORTED
+    private fun setupDownloadReceiverSafe() {
         downloadReceiver = object : BroadcastReceiver() {
             override fun onReceive(ctx: Context?, i: Intent?) {
                 val id = i?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1L) ?: -1L
@@ -269,7 +270,12 @@ class MainActivity : Activity() {
             }
         }
         val filter = IntentFilter(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-        registerReceiver(downloadReceiver, filter)
+        // ✅ OBLIGATOIRE DEPUIS ANDROID 13 : drapeau NOT_EXPORTED
+        if (Build.VERSION.SDK_INT >= 33) {
+            registerReceiver(downloadReceiver, filter, RECEIVER_NOT_EXPORTED)
+        } else {
+            registerReceiver(downloadReceiver, filter)
+        }
     }
 
     private fun updateDlProgress(id: Long) {
@@ -377,7 +383,7 @@ class MainActivity : Activity() {
     }
 
     override fun onDestroy() {
-        downloadReceiver?.let { unregisterReceiver(it) }
+        try { downloadReceiver?.let { unregisterReceiver(it) } } catch (_: Exception) {}
         webView.apply { stopLoading(); removeAllViews(); destroy() }
         super.onDestroy()
     }
