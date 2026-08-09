@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Style : PURE LIGHT identique à la maquette -->
-    <color name="fond_application">#FAFAA</color>
+    <color name="fond_application">#FAFAFA</color>
     <color name="fond_barre">#FFFFFF</color>
     <color name="fond_recherche">#F5F5F7</color>
     <color name="fond_icones">#E8E8ED</color>
