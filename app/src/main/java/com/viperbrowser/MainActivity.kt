@@ -32,14 +32,15 @@ class MainActivity : AppCompatActivity() {
         configurerSecurite()
         configurerBouton()
 
-        urlInput.setText("google.com")
-        webView.loadUrl("https://www.google.com")
+        // ⚡ PLUS DE GOOGLE AU DÉMARRAGE → PAGE VIDE = LANCEMENT INSTANTANÉ
+        urlInput.setText("")
+        webView.loadUrl("about:blank")
     }
 
     private fun configurerWebView() {
         val reglages = webView.settings
 
-        // ⚡ CACHE — ACTIF SANS MÉTHODES OBSOLÈTES
+        // ⚡ CACHE EN PREMIER — RÉSEAU SEULEMENT SI NÉCESSAIRE
         reglages.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         reglages.domStorageEnabled = true
         reglages.databaseEnabled = false
@@ -63,6 +64,7 @@ class MainActivity : AppCompatActivity() {
             reglages.setGeolocationEnabled(false)
         }
 
+        // ⚡ ACCÉLÉRATION GRAPHIQUE MAXIMALE
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
@@ -88,6 +90,7 @@ class MainActivity : AppCompatActivity() {
 
     private fun chargerUrl() {
         var url = urlInput.text.toString().trim()
+        if (url.isEmpty()) return
         if (!URLUtil.isValidUrl(url)) url = "https://$url"
         webView.loadUrl(url)
     }
@@ -102,6 +105,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() { webView.clearCache(true); webView.destroy(); super.onDestroy() }
 
     private inner class ClientWeb : WebViewClient() {
+        // 🚫 70+ DOMAINES PUB/PISTAGE BLOQUÉS AVANT TÉLÉCHARGEMENT
         private val BLOQUER = listOf(
             "doubleclick.net", "googleadservices.com", "googlesyndication.com",
             "googletagmanager.com", "amazon-adsystem.com", "adform.net",
