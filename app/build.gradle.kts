@@ -37,6 +37,6 @@ android {
 dependencies {
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.appcompat:appcompat:1.6.1")
-    // 🏆 CHROMIUM ANDROID COMPONENTS — MOTEUR BLINK
-    implementation("org.chromium.android_webview:android-webview:120.0.6099.230")
+    // ✅ SEULE DÉPENDANCE VALIDE : AndroidX WebKit
+    implementation("androidx.webkit:webkit:1.8.0")
 }
