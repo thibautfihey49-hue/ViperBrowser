@@ -31,7 +31,7 @@ class MainActivity : AppCompatActivity() {
         try {
             super.onCreate(savedInstanceState)
 
-            // 🔴 CORRECTION CRITIQUE : Initialiser WebView AVANT sur Xiaomi
+            // ✅ Initialisation AVANT setContentView pour Xiaomi/MIUI
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 WebView.setWebContentsDebuggingEnabled(false)
             }
@@ -47,7 +47,7 @@ class MainActivity : AppCompatActivity() {
             urlInput.setText("")
             webView.loadUrl("about:blank")
 
-            Log.d(TAG, "✅ Démarré")
+            Log.d(TAG, "✅ Application démarrée")
 
         } catch (e: Exception) {
             val erreur = e.message ?: e.toString()
@@ -72,7 +72,9 @@ class MainActivity : AppCompatActivity() {
         r.displayZoomControls = false
         r.allowFileAccess = false
         r.allowContentAccess = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) r.setGeolocationEnabled(false)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            r.setGeolocationEnabled(false)
+        }
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
@@ -82,9 +84,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun configurerBouton() {
-        findViewById<Button>(R.id.goButton).setOnClickListener { if (!enChargement.get()) chargerUrl() }
+        findViewById<Button>(R.id.goButton).setOnClickListener {
+            if (!enChargement.get()) chargerUrl()
+        }
         urlInput.setOnKeyListener { _, c, _ ->
-            if (c == android.view.KeyEvent.KEYCODE_ENTER && !enChargement.get()) { chargerUrl(); true } else false
+            if (c == android.view.KeyEvent.KEYCODE_ENTER && !enChargement.get()) {
+                chargerUrl()
+                true
+            } else false
         }
     }
 
