@@ -30,7 +30,10 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Button
 import android.widget.EditText
+import android.widget.GridLayout
+import android.widget.ImageView
 import android.widget.ProgressBar
+import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
 import java.io.ByteArrayInputStream
@@ -41,19 +44,21 @@ class MainActivity : Activity() {
 
     private lateinit var webView: WebView
     private lateinit var urlBar: EditText
+    private lateinit var homeSearch: EditText
     private lateinit var pageProgress: ProgressBar
     private lateinit var statutSecure: TextView
-    private lateinit var btnBack: Button
-    private lateinit var btnForward: Button
-    private lateinit var btnGo: Button
-    private lateinit var btnPrivate: Button
-    private lateinit var btnVideo: Button
-    private lateinit var btnCast: Button
-    private lateinit var btnDlList: Button
+    private lateinit var navBar: View
+    private lateinit var homeView: ScrollView
     private lateinit var dlStatusBar: View
     private lateinit var dlName: TextView
     private lateinit var dlSpeed: TextView
     private lateinit var dlProgress: ProgressBar
+    private lateinit var btnBack: Button
+    private lateinit var btnForward: Button
+    private lateinit var btnPrivate: Button
+    private lateinit var btnVideo: Button
+    private lateinit var btnCast: Button
+    private lateinit var btnDlList: Button
     private lateinit var gestureDetector: GestureDetector
     private val handler = Handler(Looper.getMainLooper())
 
@@ -62,6 +67,7 @@ class MainActivity : Activity() {
     private val downloadStartTime = mutableMapOf<Long, Long>()
     private var downloadReceiver: BroadcastReceiver? = null
     private var detectedVideoUrl: String? = null
+    private var onHomeScreen = true
 
     companion object {
         private const val REQUEST_PERMISSIONS = 1002
@@ -79,39 +85,97 @@ class MainActivity : Activity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // === Récupération des vues ===
         webView = findViewById(R.id.web_view)
         urlBar = findViewById(R.id.url_bar)
+        homeSearch = findViewById(R.id.home_search)
         pageProgress = findViewById(R.id.page_progress)
         statutSecure = findViewById(R.id.statut_secure)
-        btnBack = findViewById(R.id.btn_back)
-        btnForward = findViewById(R.id.btn_forward)
-        btnGo = findViewById(R.id.btn_go)
-        btnPrivate = findViewById(R.id.btn_private)
-        btnVideo = findViewById(R.id.btn_video)
-        btnCast = findViewById(R.id.btn_cast)
-        btnDlList = findViewById(R.id.btn_dl_list)
+        navBar = findViewById(R.id.nav_bar)
+        homeView = findViewById(R.id.home_view)
         dlStatusBar = findViewById(R.id.dl_status_bar)
         dlName = findViewById(R.id.dl_name)
         dlSpeed = findViewById(R.id.dl_speed)
         dlProgress = findViewById(R.id.dl_progress)
+        btnBack = findViewById(R.id.btn_back)
+        btnForward = findViewById(R.id.btn_forward)
+        btnPrivate = findViewById(R.id.btn_private)
+        btnVideo = findViewById(R.id.btn_video)
+        btnCast = findViewById(R.id.btn_cast)
+        btnDlList = findViewById(R.id.btn_dl_list)
 
         checkPermissions()
         setupWebViewMaxPerformance()
         setupDownloader()
         setupDownloadReceiverSafe()
         setupGestures()
+        setupHomeScreen()
 
-        webView.loadUrl("https://duckduckgo.com")
-        urlBar.setText("duckduckgo.com")
+        // === Recherche page d'accueil ===
+        homeSearch.setOnEditorActionListener { _, _, _ ->
+            loadUrlOrSearch(homeSearch.text.toString())
+            true
+        }
 
-        btnBack.setOnClickListener { if (webView.canGoBack()) webView.goBack() }
+        urlBar.setOnEditorActionListener { _, _, _ ->
+            loadUrlOrSearch(urlBar.text.toString())
+            true
+        }
+
+        btnBack.setOnClickListener { goBackOrHome() }
         btnForward.setOnClickListener { if (webView.canGoForward()) webView.goForward() }
-        btnGo.setOnClickListener { loadUrlFromBar() }
         btnPrivate.setOnClickListener { togglePrivateMode() }
         btnVideo.setOnClickListener { detectAndDownloadVideo() }
         btnCast.setOnClickListener { openCastMenu() }
         btnDlList.setOnClickListener { showDownloadsList() }
-        urlBar.setOnEditorActionListener { _, _, _ -> loadUrlFromBar(); true }
+    }
+
+    private fun setupHomeScreen() {
+        // === Sites favoris ===
+        findViewById<View>(R.id.fav_google)?.setOnClickListener { loadUrl("https://www.google.com") }
+        findViewById<View>(R.id.fav_youtube)?.setOnClickListener { loadUrl("https://www.youtube.com") }
+        findViewById<View>(R.id.fav_wikipedia)?.setOnClickListener { loadUrl("https://www.wikipedia.org") }
+        findViewById<View>(R.id.fav_duck)?.setOnClickListener { loadUrl("https://duckduckgo.com") }
+        findViewById<View>(R.id.fav_amazon)?.setOnClickListener { loadUrl("https://www.amazon.fr") }
+        findViewById<View>(R.id.fav_x)?.setOnClickListener { loadUrl("https://x.com") }
+        findViewById<View>(R.id.fav_github)?.setOnClickListener { loadUrl("https://github.com") }
+    }
+
+    private fun showBrowser() {
+        onHomeScreen = false
+        homeView.visibility = View.GONE
+        webView.visibility = View.VISIBLE
+        navBar.visibility = View.VISIBLE
+    }
+
+    private fun showHome() {
+        onHomeScreen = true
+        webView.stopLoading()
+        webView.visibility = View.GONE
+        navBar.visibility = View.GONE
+        homeView.visibility = View.VISIBLE
+        urlBar.setText("")
+    }
+
+    private fun goBackOrHome() {
+        if (!onHomeScreen && webView.canGoBack()) webView.goBack()
+        else if (!onHomeScreen) showHome()
+    }
+
+    private fun loadUrlOrSearch(input: String) {
+        var u = input.trim()
+        if (u.isEmpty()) return
+        if (!u.startsWith("http") && !u.startsWith("about:")) {
+            u = if (!u.contains(".") || u.contains(" ")) "https://duckduckgo.com/?q=${u.replace(" ", "+")}" else "https://$u"
+        }
+        loadUrl(u)
+    }
+
+    private fun loadUrl(url: String) {
+        showBrowser()
+        webView.loadUrl(url)
+        urlBar.setText(url.replace("https://", "").replace("http://", ""))
+        homeSearch.setText("")
     }
 
     private fun checkPermissions() {
@@ -130,7 +194,7 @@ class MainActivity : Activity() {
             private val SWIPE_DISTANCE = 80f
             private val SWIPE_VELOCITY = 100f
             override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
-                if (e1 == null) return false
+                if (e1 == null || onHomeScreen) return false
                 val dx = e2.x - e1.x
                 if (Math.abs(dx) > SWIPE_DISTANCE && Math.abs(vx) > SWIPE_VELOCITY) {
                     if (dx < 0 && webView.canGoForward()) { webView.goForward(); return true }
@@ -174,8 +238,8 @@ class MainActivity : Activity() {
                 pageProgress.progress = 10
                 urlBar.setText(url?.replace("https://", "")?.replace("http://", ""))
                 val secure = url?.startsWith("https") == true
-                statutSecure.text = if (secure) "🔒 SÉCURISÉ" else "⚠️ NON SÉCURISÉ"
-                statutSecure.setTextColor(android.graphics.Color.parseColor(if (secure) "#00FFCC" else "#FF6666"))
+                statutSecure.text = if (secure) "🔒" else "⚠️"
+                statutSecure.setTextColor(android.graphics.Color.parseColor(if (secure) "#34C759" else "#FF3B30"))
                 detectedVideoUrl = null
             }
 
@@ -219,17 +283,16 @@ class MainActivity : Activity() {
             CookieManager.getInstance().removeAllCookies(null)
             webView.settings.cacheMode = WebSettings.LOAD_NO_CACHE
             Toast.makeText(this, "🕶️ MODE PRIVÉ ACTIF", Toast.LENGTH_SHORT).show()
-            btnPrivate.setBackgroundColor(android.graphics.Color.parseColor("#CC3333"))
+            btnPrivate.setBackgroundColor(android.graphics.Color.parseColor("#007AFF"))
         } else {
             webView.settings.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
             Toast.makeText(this, "🕶️ MODE PRIVÉ DÉSACTIVÉ", Toast.LENGTH_SHORT).show()
-            btnPrivate.setBackgroundColor(android.graphics.Color.parseColor("#252540"))
+            btnPrivate.setBackgroundResource(R.drawable.bg_btn_light)
         }
     }
 
-    // ✅ SIGNATURE CORRIGÉE : 5 paramètres (url, ua, disposition, mimeType, taille)
     private fun setupDownloader() {
-        webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, contentLength ->
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
             startDownloadMaxSpeed(url, userAgent, contentDisposition, mimeType)
         }
     }
@@ -244,7 +307,7 @@ class MainActivity : Activity() {
                 addRequestHeader("Connection", "Keep-Alive")
                 val fn = URLUtil.guessFileName(url, disp, mime)
                 setTitle(fn)
-                setDescription("TÉLÉCHARGEMENT ULTRA RAPIDE")
+                setDescription("TÉLÉCHARGEMENT")
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fn)
             }
@@ -306,6 +369,7 @@ class MainActivity : Activity() {
     }
 
     private fun detectAndDownloadVideo() {
+        if (onHomeScreen) { Toast.makeText(this, "⚠️ Naviguez d'abord sur une page", Toast.LENGTH_SHORT).show(); return }
         Toast.makeText(this, "🔍 RECHERCHE VIDÉO...", Toast.LENGTH_SHORT).show()
         handler.postDelayed({
             val url = detectedVideoUrl
@@ -319,16 +383,19 @@ class MainActivity : Activity() {
     }
 
     private fun openCastMenu() {
+        if (onHomeScreen) { Toast.makeText(this, "⚠️ Naviguez d'abord sur une page", Toast.LENGTH_SHORT).show(); return }
         val url = webView.url ?: ""
         val vid = detectedVideoUrl
-        val opts = mutableListOf("🔗 DIFFUSER CETTE PAGE", "📺 APPAREILS DE DIFFUSION")
-        if (!vid.isNullOrEmpty()) opts.add(1, "📹 DIFFUSER LA VIDÉO")
+        val opts = mutableListOf("🔗 DIFFUSER CETTE PAGE")
+        if (!vid.isNullOrEmpty()) opts.add(0, "📹 DIFFUSER LA VIDÉO")
+        opts.add("📺 APPAREILS DE DIFFUSION")
         AlertDialog.Builder(this)
             .setTitle("📺 DIFFUSER / CAST")
             .setItems(opts.toTypedArray()) { _, which ->
-                when (which) {
-                    0 -> castUrl(url)
-                    1 -> if (!vid.isNullOrEmpty()) castUrl(vid) else openSystemCast()
+                val opt = opts[which]
+                when {
+                    opt.contains("VIDÉO") && !vid.isNullOrEmpty() -> castUrl(vid)
+                    opt.contains("PAGE") -> castUrl(url)
                     else -> openSystemCast()
                 }
             }.show()
@@ -351,19 +418,12 @@ class MainActivity : Activity() {
         } catch (_: Exception) {}
     }
 
-    private fun loadUrlFromBar() {
-        var u = urlBar.text.toString().trim()
-        if (u.isEmpty()) return
-        if (!u.startsWith("http") && !u.startsWith("about:")) {
-            u = if (!u.contains(".") || u.contains(" ")) "https://duckduckgo.com/?q=${u.replace(" ", "+")}" else "https://$u"
-        }
-        webView.loadUrl(u)
-        urlBar.clearFocus()
-    }
-
     override fun onKeyDown(code: Int, e: KeyEvent?): Boolean {
-        if (code == KeyEvent.KEYCODE_BACK && webView.canGoBack()) { webView.goBack(); return true }
-        if (code == KeyEvent.KEYCODE_BACK && !webView.canGoBack()) { confirmExit(); return true }
+        if (code == KeyEvent.KEYCODE_BACK) {
+            if (!onHomeScreen && webView.canGoBack()) { webView.goBack(); return true }
+            else if (!onHomeScreen) { showHome(); return true }
+            else { confirmExit(); return true }
+        }
         return super.onKeyDown(code, e)
     }
 
