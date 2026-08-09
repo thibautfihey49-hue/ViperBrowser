@@ -21,15 +21,16 @@ class MainActivity : AppCompatActivity() {
         urlInput = findViewById(R.id.urlInput)
         webView = findViewById(R.id.webView)
 
-        configurerWebView()
+        configurerWebViewUltraRapide()
         configurerBouton()
 
         urlInput.setText("google.com")
         chargerUrl("https://www.google.com")
     }
 
-    private fun configurerWebView() {
+    private fun configurerWebViewUltraRapide() {
         webView.settings.apply {
+            // ⚡ VITESSE MAXIMUM
             javaScriptEnabled = true
             domStorageEnabled = true
             cacheMode = WebSettings.LOAD_DEFAULT
@@ -39,13 +40,32 @@ class MainActivity : AppCompatActivity() {
             setSupportZoom(true)
             builtInZoomControls = true
             displayZoomControls = false
+
+            // ⚡ OPTIMISATIONS MÉMOIRE ET CHARGEMENT
+            allowFileAccess = false
+            allowContentAccess = false
+            databaseEnabled = false
+            useWideViewPort = true
+            loadWithOverviewMode = true
+            layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
+            enableSmoothTransition = false
         }
+
+        // ⚡ ACCÉLÉRATION MATÉRIELLE OBLIGATOIRE
+        webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
+        webView.isDrawingCacheEnabled = true
+
         webView.webViewClient = object : WebViewClient() {
             override fun onPageFinished(vue: WebView?, url: String?) {
                 url?.let { urlInput.setText(it) }
             }
+
+            // ⚡ CHARGEMENT INSTANTANÉ — pas de surcharge
+            override fun shouldOverrideUrlLoading(vue: WebView?, url: String?): Boolean {
+                url?.let { vue?.loadUrl(it) }
+                return true
+            }
         }
-        webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
     }
 
     private fun configurerBouton() {
@@ -70,8 +90,24 @@ class MainActivity : AppCompatActivity() {
         webView.loadUrl(urlFinal)
     }
 
+    // ⚡ RETOUR ARRIÈRE RAPIDE
     override fun onBackPressed() {
-        if (webView.canGoBack()) webView.goBack()
-        else super.onBackPressed()
+        if (webView.canGoBack()) {
+            webView.goBack()
+        } else {
+            super.onBackPressed()
+        }
+    }
+
+    // ⚡ LIBÉRER MÉMOIRE EN PAUSE
+    override fun onPause() {
+        webView.onPause()
+        super.onPause()
+    }
+
+    // ⚡ REPRISE INSTANTANÉE
+    override fun onResume() {
+        super.onResume()
+        webView.onResume()
     }
 }
