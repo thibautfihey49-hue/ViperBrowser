@@ -2,6 +2,8 @@ package com.viperbrowser
 
 import android.os.Bundle
 import android.os.Build
+import android.util.Log
+import android.widget.Toast
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -17,66 +19,72 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
 
+    companion object {
+        private const val TAG = "ViperBrowser"
+    }
+
     private lateinit var webView: WebView
     private lateinit var urlInput: EditText
     private val enChargement = AtomicBoolean(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        try {
+            super.onCreate(savedInstanceState)
 
-        urlInput = findViewById(R.id.urlInput)
-        webView = findViewById(R.id.webView)
+            // 🔴 CORRECTION CRITIQUE : Initialiser WebView AVANT sur Xiaomi
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                WebView.setWebContentsDebuggingEnabled(false)
+            }
 
-        configurerWebView()
-        configurerBouton()
+            setContentView(R.layout.activity_main)
 
-        urlInput.setText("")
-        webView.loadUrl("about:blank")
+            urlInput = findViewById(R.id.urlInput)
+            webView = findViewById(R.id.webView)
+
+            configurerWebView()
+            configurerBouton()
+
+            urlInput.setText("")
+            webView.loadUrl("about:blank")
+
+            Log.d(TAG, "✅ Démarré")
+
+        } catch (e: Exception) {
+            val erreur = e.message ?: e.toString()
+            Log.e(TAG, "❌ ERREUR: $erreur", e)
+            Toast.makeText(this, "ERREUR: $erreur", Toast.LENGTH_LONG).show()
+        }
     }
 
     private fun configurerWebView() {
         val r = webView.settings
-
         r.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
         r.domStorageEnabled = true
         r.javaScriptEnabled = true
         r.loadsImagesAutomatically = true
         r.defaultTextEncodingName = "UTF-8"
-
         r.useWideViewPort = true
         r.loadWithOverviewMode = true
         r.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
         r.minimumFontSize = 8
-
         r.setSupportZoom(true)
         r.builtInZoomControls = true
         r.displayZoomControls = false
-
         r.allowFileAccess = false
         r.allowContentAccess = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            r.setGeolocationEnabled(false)
-        }
-
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) r.setGeolocationEnabled(false)
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
-
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
         webView.webViewClient = ClientWeb()
     }
 
     private fun configurerBouton() {
-        findViewById<Button>(R.id.goButton).setOnClickListener {
-            if (!enChargement.get()) chargerUrl()
-        }
+        findViewById<Button>(R.id.goButton).setOnClickListener { if (!enChargement.get()) chargerUrl() }
         urlInput.setOnKeyListener { _, c, _ ->
-            if (c == android.view.KeyEvent.KEYCODE_ENTER && !enChargement.get()) {
-                chargerUrl()
-                true
-            } else false
+            if (c == android.view.KeyEvent.KEYCODE_ENTER && !enChargement.get()) { chargerUrl(); true } else false
         }
     }
 
