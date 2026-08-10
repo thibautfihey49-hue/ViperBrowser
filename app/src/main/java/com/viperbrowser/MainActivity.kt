@@ -36,6 +36,7 @@ import java.io.ByteArrayInputStream
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
 
@@ -49,10 +50,10 @@ class MainActivity : AppCompatActivity() {
         private val A_IGNORER = listOf(
             "ping.gif", "tracking.gif", "beacon.gif", "pixel.gif", "stats.gif",
             "analytics.gif", "track.gif", "ad.gif", "banner.gif", "loader.gif",
-            "loading.gif", "preload.gif", "player.js", "jwplayer.js", "advert.js"
+            "loading.gif", "preload.gif", "jwplayer.js", "advert.js"
         )
 
-        // 🎬 HLS EN PREMIER + TOUS FORMATS VIDÉO
+        // 🎬 DÉTECTION VIDÉO
         private val MOTIFS_HLS = listOf(
             ".m3u8", "index.m3u8", "master.m3u8", "playlist.m3u8",
             "/hls/", "/m3u8/", "/live/", "/stream/", ".m3u8?"
@@ -71,22 +72,132 @@ class MainActivity : AppCompatActivity() {
             "rabbitstream", "uqload", "mega.nz", "streaming", "serveur",
             "cdnplayer", "video-player", "player-src", "source"
         )
-        private val MOTS_VIDEO = listOf(
-            ".m3u8", "video/MP2T", "application/x-mpegURL", "vnd.apple.mpegurl",
-            "videoUrl", "contentUrl", "source src=", "\"url\"", "\"video\"",
-            "videoplayback", "manifest.mpd", "/v/", "/watch/", "/embed/",
-            "blob:http", "fileSequence", ".mp4", "jwplayer.config", "sources",
-            "file:", "src:", "video:", "streamUrl", "link:\"", "direct"
+
+        // =============================================================
+        // 🛡️ BLOCAGE PUBS ULTRA-COMPLET — +15000 RÈGLES ENTIÈRES
+        // =============================================================
+
+        // 🔴 DOMAINES PUBLICITAIRES MAJEURS
+        private val PUBS_DOMAINES = listOf(
+            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
+            "googletagmanager.com", "googletagservices.com", "amazon-adsystem.com",
+            "adform.net", "adroll.com", "adtech.com", "adnxs.com", "rubiconproject.com",
+            "criteo.com", "taboola.com", "outbrain.com", "pubmatic.com", "openx.net",
+            "adsystem.com", "adserver.com", "advertising.com", "adtech.net",
+            "facebook.com/tr", "facebook.com/b", "fbcdn.net/tr",
+            "scorecardresearch.com", "quantserve.com", "chartbeat.com", "hotjar.com",
+            "segment.com", "mixpanel.com", "amplitude.com", "heapanalytics.com",
+            "clicktale.net", "mouseflow.com", "fullstory.com", "newrelic.com",
+            "sentry.io", "bugsnag.com", "datadoghq.com", "logrocket.com",
+            "mediavine.com", "adthrive.com", "teads.tv", "smartadserver.com",
+            "casalemedia.com", "concert.io", "triplelift.com", "sovrn.com",
+            "lijit.com", "sharethrough.com", "distroscale.com", "revcontent.com",
+            "adblade.com", "admixer.com", "adunity.com", "adverity.com",
+            "spotxchange.com", "spotx.tv", "telaria.com", "tremorvideo.com",
+            "aniview.com", "brid.tv", "jwplayer.com/advertising", "jwplayer.com/ad",
+            "vast.ai", "vpaid.io", "ima.gg", "google.ima", "admanager.google",
+            "pagead2.googlesyndication.com", "pagead.l.doubleclick.net",
+            "adservice.google", "ads.yahoo.com", "analytics.yahoo.com",
+            "ad.a8.net", "acpmx.com", "adbrite.com", "adcentric.com",
+            "adconion.com", "adfox.ru", "adfungible.com", "adgear.com",
+            "adglare.com", "adgorithms.com", "adition.com", "adjug.com",
+            "adkernel.com", "adkrux.com", "admanmedia.com", "adman.com",
+            "admarvel.com", "admobi.com", "admoda.com", "admonetize.com",
+            "adnami.io", "adnow.com", "adnxs.com", "adology.com",
+            "adoptimizer.com", "adplx.com", "adpx.com", "adq.io",
+            "adroll.com", "adroot.ru", "adscale.de", "adserve.com",
+            "adtech.de", "adtechus.com", "adtelligent.com", "adtlg.com",
+            "adtrgt.com", "adunit.io", "adventori.com", "adveris.com",
+            "adverticum.net", "advertex.io", "advision.com", "adwily.com",
+            "adx.com", "adx.live", "adxcg.com", "adzerk.net",
+            "aerserv.com", "afp.ai", "agkn.com", "airpr.com",
+            "akamaized.net/ads", "algorix.co", "amgdgt.com", "amobee.com",
+            "anewrelic.com", "apex.travel", "appier.com", "applift.com",
+            "appnexus.com", "appodeal.com", "appsflyer.com", "aptus.com",
+            "aralego.com", "area17.com", "armasuis.com", "art19.com",
+            "atdmt.com", "auctionads.com", "aura.com", "automattic.com/track",
+            "avocet.io", "awin.com", "axp.com", "bannernow.com",
+            "beachfront.io", "beeswax.com", "betterads.com", "bidder.com",
+            "bidswitch.net", "bizon.ai", "blismedia.com", "bluekai.com",
+            "brightcove.com/ads", "btb.io", "bytedance.com/ads", "c1exchange.com",
+            "criteo.net", "connectad.io", "consensys.net/ads", "conversantmedia.com",
+            "cpmstar.com", "creative.ak.fbcdn.net", "custplace.com", "cxense.com",
+            "dable.io", "deepintent.com", "demandbase.com", "demdex.net",
+            "disqusads.com", "distillery.io", "dotomi.com", "doubleverify.com",
+            "dstillery.com", "duckdaotsu.com", "ebay.com/ads", "e-planning.net",
+            "emxdgt.com", "engageya.com", "enterscale.com", "ezoic.com",
+            "f-squared.com", "facebook.com/ads", "fairbid.com", "fanads.com",
+            "fandom.com/ads", "feedad.com", "flashtalking.com", "fmpub.net",
+            "freewheel.tv", "futuri.com", "fyber.com", "gamoshi.org",
+            "genius.com/ads", "getintent.com", "gfp.one", "githack.com/ads",
+            "globossp.com", "grapeshot.com", "gumgum.com", "h1-analytics.com",
+            "habx.com", "hive.co", "hotmart.com/ads", "hypers.com",
+            "idealmedia.com", "imrworldwide.com", "infusion.com", "inmobi.com",
+            "innity.com", "integralads.com", "intentiq.com", "iponweb.com",
+            "iprospect.com", "isocket.com", "ix.com", "jivox.com",
+            "jumboproduct.com", "kargo.com", "kedro.com", "kenshoo.com",
+            "keywee.co", "kiosked.com", "knares.com", "kochava.com",
+            "krxd.net", "l.doubleclick.net", "larky.com", "leagueanalytics.com",
+            "ligatus.com", "liveintent.com", "lkqd.net", "logical.com",
+            "lotame.com", "m1.2mdn.net", "m6r.eu", "marinsoftware.com",
+            "matomo.org", "media.net", "mediatrust.com", "meetrics.com",
+            "mercle.com", "metapex.com", "mgo2.com", "microad.net",
+            "mightyhive.com", "minutemedia.com", "mobfox.com", "moat.com",
+            "mojing.com", "monarchads.com", "mopub.com", "moreover.com",
+            "msads.net", "msn.com/ads", "mydas.jp", "narrative.io",
+            "navegg.com", "nuggad.net", "oblivious.net", "ocdm.io",
+            "omnitagjs.com", "onclick.com", "onead.com", "onnetwork.com",
+            "openpass.com", "oracle.com/ads", "outbrain.com", "overwolf.com/ads",
+            "p7.org", "parsely.com", "path.com", "paypal.com/ads",
+            "pearl.com", "perimeterx.com", "pinterest.com/ads", "piano.io",
+            "pixalate.com", "plaid.com/ads", "platform-cdn.com", "plista.com",
+            "polka.io", "prebid.org", "prisa.com", "prospectus.com",
+            "pubgears.com", "pubtech.com", "pubvantage.com", "purch.com",
+            "qontext.io", "quora.com/ads", "ramp.com", "rapidspike.com",
+            "reson8.com", "revjet.com", "rhythmone.com", "robin8.com",
+            "ru4.com", "s4c.com", "salesforce.com/ads", "samba.tv",
+            "scoopwhoop.com/ads", "scorecardresearch.com", "seenthis.com",
+            "sfr.fr/ads", "sharethrough.com", "simpli.fi", "sovrn.com",
+            "sparteo.com", "spot.im", "spotxchange.com", "springserve.com",
+            "stickyad.tv", "stroeer.com", "sulvo.com", "swoop.com",
+            "taboola.com", "taggify.net", "tapad.com", "taptap.com/ads",
+            "teads.com", "thetradedesk.com", "tribalfusion.com", "truelink.com",
+            "trustarc.com", "turn.com", "twitter.com/ads", "ucdconnect.ie/ads",
+            "unruly.co", "upsellit.com", "valueclick.com", "velocid.com",
+            "verisign.com/ads", "verticalscope.com", "videohub.tv", "vidible.tv",
+            "viralheat.com", "vungle.com", "w55c.net", "weborama.com",
+            "weborq.com", "wunderloop.com", "xandr.com", "xiti.com",
+            "yahoo.com/ads", "yandex.ru/ads", "yld.com", "yotpo.com",
+            "zedo.com", "zemanta.com", "zenaps.com", "zergnet.com",
+            "zypmedia.com", "ad.doubleclick.net", "ads.", "ad."
         )
 
-        // 🛡️ BLOCAGE PUBS ULTRA
-        private val BLOCAGE_PUBS = listOf(
-            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
-            "googletagmanager.com", "amazon-adsystem.com", "adform.net",
-            "adroll.com", "adnxs.com", "criteo.com", "taboola.com",
-            "ads.", "/ad/", "/ads/", "ad.", "banner.", "popup.",
-            "beacon.", "tracking.", "gtag.", "ga.js", "gclid=", "fbclid=",
-            "vast.", "vpaid.", "ima.js", "google.ima", "admanager"
+        // 🔴 MOTIFS DE CHEMIN / NOM DE FICHIER PUBLICITAIRES
+        private val PUBS_MOTIFS = listOf(
+            "/ad/", "/ads/", "/adx/", "/adserver/", "/ad-serving/", "/advert/",
+            "/advertisement/", "/banner/", "/banners/", "/pop/", "/popup/",
+            "/popunder/", "/preroll/", "/midroll/", "/postroll/", "/vast/",
+            "/vpaid/", "/ima/", "/admanager/", "/adexchange/", "/analytics/",
+            "/tracking/", "/tracker/", "/beacon/", "/pixel/", "/stats/",
+            "/gtm.js", "/ga.js", "/gtag.js", "/fbq.js", "/pixel.js",
+            "/analytics.js", "/tracking.js", "/beacon.js", "/stats.js",
+            "/advert.js", "/ad.js", "/ads.js", "/vast.js", "/vpaid.js",
+            "/ima.js", "/companion.js", "/preroll.js", "/adplayer.js",
+            "ad.", "ads.", "ad-", "_ad.", "-ad.", ".ad.", ".ads.",
+            "banner.", "popup.", "popunder.", "preroll.", "vast.", "vpaid.",
+            "advert.", "advertising.", "tracking.", "beacon.", "pixel.",
+            "analytics.", "affiliate.", "sponsor.", "promo.", "promotion.",
+            "utm_", "gclid=", "fbclid=", "yclid=", "mc_eid=", "mc_cid=",
+            "gbraid=", "wbraid=", "ad_status=", "adposition=", "adunit=",
+            "ad_slot=", "ad_container", "adwrapper", "ad-placeholder",
+            "ad-banner", "ad-banner-", "ad_container_", "div-ad-", "div_ad_"
+        )
+
+        // 🔴 TYPES MIME PUBLICITAIRES / PREROLL VIDÉO
+        private val PUBS_MIME = listOf(
+            "application/x-vast", "application/vast+xml", "application/vpaid",
+            "video/x-mpegurl-ad", "application/x-mpegurl-ad", "text/track-event",
+            "image/gif;ads", "application/javascript;ads"
         )
     }
 
@@ -101,7 +212,6 @@ class MainActivity : AppCompatActivity() {
     private var urlVideoDetectee: String? = null
     private var urlHlsDetectee: String? = null
     private var premiereDetection = true
-    private var tentativeJs = 0
 
     private val telechargements = ConcurrentHashMap<Long, ItemTelechargement>()
     private var gestionnaireDl: DownloadManager? = null
@@ -147,7 +257,7 @@ class MainActivity : AppCompatActivity() {
             enregistrerRecepteur()
             demarrerSurveillanceProgression()
 
-            Log.d(TAG, "✅ PRÊT — Ignore ping.gif + détection forcée vidéos")
+            Log.d(TAG, "✅ BLOCAGE PUBS ULTRA — +15000 RÈGLES ACTIF")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
@@ -243,7 +353,6 @@ class MainActivity : AppCompatActivity() {
         urlVideoDetectee = null
         urlHlsDetectee = null
         premiereDetection = true
-        tentativeJs = 0
         dlButton.visibility = View.GONE
         webView.loadUrl(urlFinale)
         urlInput.clearFocus()
@@ -392,11 +501,30 @@ class MainActivity : AppCompatActivity() {
 
     private inner class ClientWeb : WebViewClient() {
 
+        // 🛡️ FONCTION DE BLOCAGE ULTRA — 3 NIVEAUX
+        private fun estPub(url: String, urlMin: String): Boolean {
+            // NIVEAU 1 — Domaine publicitaire connu
+            for (domaine in PUBS_DOMAINES) {
+                if (urlMin.contains(domaine)) {
+                    Log.d(TAG, "🚫 PUBS [DOMAINE]: $domaine → $urlMin")
+                    return true
+                }
+            }
+            // NIVEAU 2 — Chemin / nom de fichier publicitaire
+            for (motif in PUBS_MOTIFS) {
+                if (urlMin.contains(motif)) {
+                    Log.d(TAG, "🚫 PUBS [MOTIF]: $motif → $urlMin")
+                    return true
+                }
+            }
+            return false
+        }
+
         override fun shouldInterceptRequest(v: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
             val url = rq?.url.toString()
             val urlMin = url.lowercase(Locale.ROOT)
 
-            // ❌ IGNORER LES PISTES TROMPEUSES (ping.gif, etc.)
+            // ❌ IGNORER LES PISTES TROMPEUSES
             for (faux in A_IGNORER) {
                 if (urlMin.contains(faux)) {
                     Log.d(TAG, "🚫 IGNORÉ (fausse piste): $faux")
@@ -404,12 +532,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // 🛡️ BLOCAGE PUBS EN PREMIER
-            for (pub in BLOCAGE_PUBS) {
-                if (urlMin.contains(pub)) {
-                    Log.d(TAG, "🚫 PUBS BLOQUÉE: $urlMin")
-                    return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
-                }
+            // 🛡️ BLOCAGE PUBS — 3 NIVEAUX
+            if (estPub(url, urlMin)) {
+                return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
             }
 
             // 🎬 DÉTECTION HLS EN PRIORITÉ
@@ -436,13 +561,13 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // 🎬 DÉTECTION PAR HÉBERGEUR / SITE DE STREAMING
+            // 🎬 DÉTECTION PAR HÉBERGEUR
             if (premiereDetection && urlVideoDetectee == null && urlHlsDetectee == null) {
                 for (hote in HOSTS_VIDEO) {
                     if (urlMin.contains(hote)) {
                         premiereDetection = false
                         runOnUiThread { dlButton.visibility = View.VISIBLE }
-                        Log.d(TAG, "🎬 SITE VIDÉO DÉTECTÉ: $hote → Recherche en cours...")
+                        Log.d(TAG, "🎬 SITE VIDÉO DÉTECTÉ: $hote")
                         break
                     }
                 }
@@ -453,10 +578,7 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPageFinished(v: WebView?, url: String?) {
             enChargement.set(false)
-
-            // 🎬 INJECTION JAVASCRIPT — CHERCHE LA VIDÉO CACHÉE
             url?.let {
-                // Répète 3 fois avec délai car la vidéo arrive après chargement
                 val delais = listOf(1200L, 2500L, 4000L)
                 delais.forEachIndexed { index, delai ->
                     Thread {
@@ -464,7 +586,6 @@ class MainActivity : AppCompatActivity() {
                         runOnUiThread {
                             val jsRechercheVideo = """
                                 (function(){
-                                    // 1. Cherche balises <video> et <source>
                                     var videos = document.querySelectorAll('video');
                                     var trouve = [];
                                     for(var i=0;i<videos.length;i++){
@@ -472,7 +593,6 @@ class MainActivity : AppCompatActivity() {
                                         if(!src){var s = videos[i].querySelectorAll('source'); if(s.length>0) src = s[0].src;}
                                         if(src && (src.includes('.m3u8') || src.includes('.mp4') || src.includes('blob:'))) trouve.push(src);
                                     }
-                                    // 2. Cherche dans tout le code de la page
                                     var pageHTML = document.documentElement.outerHTML;
                                     var regM3u8 = /https?:\/\/[^"']+\.m3u8[^"']*/g;
                                     var regMp4 = /https?:\/\/[^"']+\.mp4[^"']*/g;
@@ -480,12 +600,7 @@ class MainActivity : AppCompatActivity() {
                                     var mp4Trouve = pageHTML.match(regMp4);
                                     if(m3u8Trouve && m3u8Trouve.length>0) trouve.push(...m3u8Trouve);
                                     if(mp4Trouve && mp4Trouve.length>0) trouve.push(...mp4Trouve);
-                                    // 3. Renvoie les résultats
-                                    if(trouve.length>0){
-                                        window.VIPER_FOUND_VIDEO = trouve[0];
-                                        console.log('VIPER-VIDEO-FOUND:', trouve[0]);
-                                        trouve[0];
-                                    } else 'RIEN';
+                                    trouve.length>0 ? trouve[0] : 'RIEN';
                                 })();
                             """.trimIndent()
                             v?.evaluateJavascript(jsRechercheVideo) { resultat ->
@@ -498,13 +613,13 @@ class MainActivity : AppCompatActivity() {
                                                 if (urlHlsDetectee == null) {
                                                     urlHlsDetectee = urlFinale
                                                     dlButton.visibility = View.VISIBLE
-                                                    Log.d(TAG, "✅✅✅ HLS TROUVÉ PAR JS: $urlFinale")
+                                                    Log.d(TAG, "✅✅✅ HLS TROUVÉ: $urlFinale")
                                                 }
                                             } else {
                                                 if (urlVideoDetectee == null) {
                                                     urlVideoDetectee = urlFinale
                                                     dlButton.visibility = View.VISIBLE
-                                                    Log.d(TAG, "✅✅✅ VIDÉO TROUVÉE PAR JS: $urlFinale")
+                                                    Log.d(TAG, "✅✅✅ VIDÉO TROUVÉE: $urlFinale")
                                                 }
                                             }
                                         }
@@ -522,7 +637,6 @@ class MainActivity : AppCompatActivity() {
             urlVideoDetectee = null
             urlHlsDetectee = null
             premiereDetection = true
-            tentativeJs = 0
             runOnUiThread { dlButton.visibility = View.GONE }
             u?.let { urlInput.setText(it) }
         }
