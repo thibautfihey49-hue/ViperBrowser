@@ -36,7 +36,6 @@ import java.io.ByteArrayInputStream
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,6 +44,13 @@ class MainActivity : AppCompatActivity() {
         private const val MOTEUR_RECHERCHE = "https://www.google.com/search?q="
         private const val CANAL_NOTIF_DL = "telechargements"
         private const val PERM_STOCKAGE = 12345
+
+        // ❌ FICHIERS À IGNORER — PISTES TROMPEUSES
+        private val A_IGNORER = listOf(
+            "ping.gif", "tracking.gif", "beacon.gif", "pixel.gif", "stats.gif",
+            "analytics.gif", "track.gif", "ad.gif", "banner.gif", "loader.gif",
+            "loading.gif", "preload.gif", "player.js", "jwplayer.js", "advert.js"
+        )
 
         // 🎬 HLS EN PREMIER + TOUS FORMATS VIDÉO
         private val MOTIFS_HLS = listOf(
@@ -62,13 +68,15 @@ class MainActivity : AppCompatActivity() {
             "bilibili.com", "nicovideo.jp", "jwplayer", "video.", "watch",
             "player", "embed", "stream", "cdn.v", "vod.", "media.", "live.",
             "flemmix.me", "streamtape", "vidoza", "doodstream", "voe.sx",
-            "rabbitstream", "uqload", "mega.nz", "streaming", "serveur"
+            "rabbitstream", "uqload", "mega.nz", "streaming", "serveur",
+            "cdnplayer", "video-player", "player-src", "source"
         )
         private val MOTS_VIDEO = listOf(
             ".m3u8", "video/MP2T", "application/x-mpegURL", "vnd.apple.mpegurl",
             "videoUrl", "contentUrl", "source src=", "\"url\"", "\"video\"",
             "videoplayback", "manifest.mpd", "/v/", "/watch/", "/embed/",
-            "blob:http", "fileSequence", ".mp4", "jwplayer.config", "sources"
+            "blob:http", "fileSequence", ".mp4", "jwplayer.config", "sources",
+            "file:", "src:", "video:", "streamUrl", "link:\"", "direct"
         )
 
         // 🛡️ BLOCAGE PUBS ULTRA
@@ -93,6 +101,7 @@ class MainActivity : AppCompatActivity() {
     private var urlVideoDetectee: String? = null
     private var urlHlsDetectee: String? = null
     private var premiereDetection = true
+    private var tentativeJs = 0
 
     private val telechargements = ConcurrentHashMap<Long, ItemTelechargement>()
     private var gestionnaireDl: DownloadManager? = null
@@ -138,7 +147,7 @@ class MainActivity : AppCompatActivity() {
             enregistrerRecepteur()
             demarrerSurveillanceProgression()
 
-            Log.d(TAG, "✅ PRÊT — Détection JWPlayer + HLS + sites cachés")
+            Log.d(TAG, "✅ PRÊT — Ignore ping.gif + détection forcée vidéos")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
@@ -234,6 +243,7 @@ class MainActivity : AppCompatActivity() {
         urlVideoDetectee = null
         urlHlsDetectee = null
         premiereDetection = true
+        tentativeJs = 0
         dlButton.visibility = View.GONE
         webView.loadUrl(urlFinale)
         urlInput.clearFocus()
@@ -386,6 +396,14 @@ class MainActivity : AppCompatActivity() {
             val url = rq?.url.toString()
             val urlMin = url.lowercase(Locale.ROOT)
 
+            // ❌ IGNORER LES PISTES TROMPEUSES (ping.gif, etc.)
+            for (faux in A_IGNORER) {
+                if (urlMin.contains(faux)) {
+                    Log.d(TAG, "🚫 IGNORÉ (fausse piste): $faux")
+                    return super.shouldInterceptRequest(v, rq)
+                }
+            }
+
             // 🛡️ BLOCAGE PUBS EN PREMIER
             for (pub in BLOCAGE_PUBS) {
                 if (urlMin.contains(pub)) {
@@ -424,7 +442,7 @@ class MainActivity : AppCompatActivity() {
                     if (urlMin.contains(hote)) {
                         premiereDetection = false
                         runOnUiThread { dlButton.visibility = View.VISIBLE }
-                        Log.d(TAG, "🎬 SITE VIDÉO DÉTECTÉ: $hote → Recherche sources...")
+                        Log.d(TAG, "🎬 SITE VIDÉO DÉTECTÉ: $hote → Recherche en cours...")
                         break
                     }
                 }
@@ -436,31 +454,65 @@ class MainActivity : AppCompatActivity() {
         override fun onPageFinished(v: WebView?, url: String?) {
             enChargement.set(false)
 
-            // 🎬 INJECTION JAVASCRIPT — DÉTECTE VIDÉOS CACHÉES DANS JWPLAYER / SCRIPTS
+            // 🎬 INJECTION JAVASCRIPT — CHERCHE LA VIDÉO CACHÉE
             url?.let {
-                val jsRechercheVideo = """
-                    (function() {
-                        setTimeout(function() {
-                            // 1. Balises <video> directes
-                            var videos = document.querySelectorAll('video');
-                            for (var i = 0; i < videos.length; i++) {
-                                var src = videos[i].src || (videos[i].querySelector('source') ? videos[i].querySelector('source').src : '');
-                                if (src && (src.includes('.m3u8') || src.includes('.mp4') || src.includes('.m3u8') || src.includes('blob:'))) {
-                                    window.VIPER_VIDEO_SRC = src;
-                                    console.log('VIPER-VIDEO:', src);
+                // Répète 3 fois avec délai car la vidéo arrive après chargement
+                val delais = listOf(1200L, 2500L, 4000L)
+                delais.forEachIndexed { index, delai ->
+                    Thread {
+                        Thread.sleep(delai)
+                        runOnUiThread {
+                            val jsRechercheVideo = """
+                                (function(){
+                                    // 1. Cherche balises <video> et <source>
+                                    var videos = document.querySelectorAll('video');
+                                    var trouve = [];
+                                    for(var i=0;i<videos.length;i++){
+                                        var src = videos[i].src;
+                                        if(!src){var s = videos[i].querySelectorAll('source'); if(s.length>0) src = s[0].src;}
+                                        if(src && (src.includes('.m3u8') || src.includes('.mp4') || src.includes('blob:'))) trouve.push(src);
+                                    }
+                                    // 2. Cherche dans tout le code de la page
+                                    var pageHTML = document.documentElement.outerHTML;
+                                    var regM3u8 = /https?:\/\/[^"']+\.m3u8[^"']*/g;
+                                    var regMp4 = /https?:\/\/[^"']+\.mp4[^"']*/g;
+                                    var m3u8Trouve = pageHTML.match(regM3u8);
+                                    var mp4Trouve = pageHTML.match(regMp4);
+                                    if(m3u8Trouve && m3u8Trouve.length>0) trouve.push(...m3u8Trouve);
+                                    if(mp4Trouve && mp4Trouve.length>0) trouve.push(...mp4Trouve);
+                                    // 3. Renvoie les résultats
+                                    if(trouve.length>0){
+                                        window.VIPER_FOUND_VIDEO = trouve[0];
+                                        console.log('VIPER-VIDEO-FOUND:', trouve[0]);
+                                        trouve[0];
+                                    } else 'RIEN';
+                                })();
+                            """.trimIndent()
+                            v?.evaluateJavascript(jsRechercheVideo) { resultat ->
+                                Log.d(TAG, "🔍 JS tentative ${index+1}: $resultat")
+                                resultat?.let { res ->
+                                    if (res.contains(".m3u8") || res.contains(".mp4") || res.contains("blob:")) {
+                                        var urlFinale = res.trim().removeSurrounding("\"")
+                                        if (urlFinale.startsWith("http")) {
+                                            if (urlFinale.contains(".m3u8")) {
+                                                if (urlHlsDetectee == null) {
+                                                    urlHlsDetectee = urlFinale
+                                                    dlButton.visibility = View.VISIBLE
+                                                    Log.d(TAG, "✅✅✅ HLS TROUVÉ PAR JS: $urlFinale")
+                                                }
+                                            } else {
+                                                if (urlVideoDetectee == null) {
+                                                    urlVideoDetectee = urlFinale
+                                                    dlButton.visibility = View.VISIBLE
+                                                    Log.d(TAG, "✅✅✅ VIDÉO TROUVÉE PAR JS: $urlFinale")
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
-                            // 2. Liens vers .m3u8 / .mp4 dans la page
-                            var tousLiens = document.querySelectorAll('a[href*=".m3u8"], a[href*=".mp4"], a[href*=".mpd"], a[href*="/hls/"]');
-                            for (var j = 0; j < tousLiens.length; j++) {
-                                var l = tousLiens[j].href;
-                                if (l) { window.VIPER_VIDEO_SRC = l; }
-                            }
-                        }, 800);
-                    })();
-                """.trimIndent()
-                v?.evaluateJavascript(jsRechercheVideo) { resultat ->
-                    Log.d(TAG, "JS Recherche vidéo: $resultat")
+                        }
+                    }.start()
                 }
             }
         }
@@ -470,6 +522,7 @@ class MainActivity : AppCompatActivity() {
             urlVideoDetectee = null
             urlHlsDetectee = null
             premiereDetection = true
+            tentativeJs = 0
             runOnUiThread { dlButton.visibility = View.GONE }
             u?.let { urlInput.setText(it) }
         }
