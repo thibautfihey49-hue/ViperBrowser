@@ -42,10 +42,55 @@ class MainActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "ViperBrowser"
         private const val MOTEUR_RECHERCHE = "https://www.google.com/search?q="
-        private val EXT_VIDEO = listOf(".mp4", ".m3u8", ".webm", ".avi", ".mov", ".mkv", ".flv", ".mpd")
-        private val HOSTS_VIDEO = listOf("youtube.com", "vimeo.com", "dailymotion.com", "twitch.tv", "video", "watch", "player")
-        private const val PERM_STOCKAGE = 12345
         private const val CANAL_NOTIF_DL = "telechargements"
+        private const val PERM_STOCKAGE = 12345
+
+        // 🎬 DÉTECTION VIDÉO — HLS EN PREMIER + TOUS FORMATS
+        private val EXT_VIDEO = listOf(
+            ".m3u8", ".m3u8?", "/m3u8/", ".mp4", ".webm", ".avi", ".mov", ".mkv",
+            ".flv", ".mpd", ".ts", ".m4v", ".3gp", ".ogg", ".ogv", ".wmv", ".asf"
+        )
+        private val MOTIFS_HLS = listOf(
+            ".m3u8", "index.m3u8", "playlist.m3u8", "master.m3u8", "manifest.m3u8",
+            "/hls/", "/m3u8/", "/live/", "/stream/", "fileSequence", ".ts?", ".m3u8"
+        )
+        private val HOSTS_VIDEO = listOf(
+            "youtube.com", "youtu.be", "vimeo.com", "dailymotion.com", "twitch.tv",
+            "googlevideo.com", "ytimg.com", "vimeocdn.com", "akamaihd.net",
+            "fb.watch", "facebook.com/video", "instagram.com/reel", "tiktok.com",
+            "x.com/video", "bilibili.com", "nicovideo.jp", "video.", "watch",
+            "player", "embed", "stream", "cdn.v", "vod.", "media.", "live."
+        )
+        private val MOTS_VIDEO = listOf(
+            ".m3u8", "video/MP2T", "application/x-mpegURL", "vnd.apple.mpegurl",
+            "video-src", "source src=", "videoUrl", "contentUrl", "\"url\"",
+            "videoplayback", "manifest.mpd", "/v/", "/watch/", "/embed/", "blob:http"
+        )
+
+        // 🛡️ BLOCAGE PUBS ULTRA COMPLET
+        private val BLOCAGE_PUBS = listOf(
+            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
+            "googletagmanager.com", "googletagservices.com", "amazon-adsystem.com",
+            "adform.net", "adroll.com", "adtech.com", "adnxs.com", "rubiconproject.com",
+            "criteo.com", "taboola.com", "outbrain.com", "pubmatic.com", "openx.net",
+            "adsystem.com", "adserver.com", "advertising.com", "adtech.net",
+            "facebook.com/tr", "facebook.com/b", "fbcdn.net/tr", "analytics",
+            "scorecardresearch.com", "quantserve.com", "chartbeat.com", "hotjar.com",
+            "segment.com", "mixpanel.com", "amplitude.com", "heapanalytics.com",
+            "clicktale.net", "mouseflow.com", "fullstory.com", "newrelic.com",
+            "sentry.io", "bugsnag.com", "datadoghq.com", "logrocket.com",
+            "ads.", ".ads.", "/ad/", "/ads/", "ad.", "ad-", "_ad.", "-ad.",
+            "banner.", "popup.", "popunder.", "affiliate.", "sponsor.", "promo.",
+            "beacon.", "tracking.", "track.", "stats.", "metrics.", "telemetry.",
+            "gtag.", "ga.js", "gtm.js", "fbq.", "pixel.", "utm_", "gclid=", "fbclid=",
+            "pagead2.", "pagead/", "adstatus.", "adx.", "adsbygoogle", "adsense",
+            "mediavine.com", "adthrive.com", "teads.tv", "smartadserver.com",
+            "casalemedia.com", "concert.io", "triplelift.com", "sovrn.com",
+            "lijit.com", "sharethrough.com", "distroscale.com", "revcontent.com",
+            "adblade.com", "admixer.com", "adunity.com", "adverity.com",
+            "video-ad.", "preroll.", "midroll.", "postroll.", "vast.", "vpaid.",
+            "ima.js", "google.ima", "admanager", "adexchange", "pubads", "gpt.js"
+        )
     }
 
     private lateinit var webView: WebView
@@ -57,6 +102,7 @@ class MainActivity : AppCompatActivity() {
 
     private val enChargement = AtomicBoolean(false)
     private var urlVideoDetectee: String? = null
+    private var urlHlsDetectee: String? = null
 
     private val telechargements = ConcurrentHashMap<Long, ItemTelechargement>()
     private var gestionnaireDl: DownloadManager? = null
@@ -75,9 +121,7 @@ class MainActivity : AppCompatActivity() {
     private val recepteurDl = object : BroadcastReceiver() {
         override fun onReceive(contexte: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
-            if (id != -1L) {
-                actualiserProgression(id)
-            }
+            if (id != -1L) actualiserProgression(id)
         }
     }
 
@@ -104,7 +148,7 @@ class MainActivity : AppCompatActivity() {
             enregistrerRecepteur()
             demarrerSurveillanceProgression()
 
-            Log.d(TAG, "✅ PRÊT — Téléchargements complets + suivi")
+            Log.d(TAG, "✅ PRÊT — HLS détecté en premier + Blocage pubs ultra")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
@@ -179,8 +223,9 @@ class MainActivity : AppCompatActivity() {
             if (!enChargement.get()) chargerOuRechercher()
         }
         dlButton.setOnClickListener {
-            urlVideoDetectee?.let { lancerTelechargement(it) }
-                ?: Toast.makeText(this, "Aucune vidéo détectée", Toast.LENGTH_SHORT).show()
+            val urlCible = urlHlsDetectee ?: urlVideoDetectee
+            urlCible?.let { lancerTelechargement(it) }
+                ?: Toast.makeText(this, "Aucune vidéo/HLS détectée", Toast.LENGTH_SHORT).show()
         }
         listeDlButton.setOnClickListener {
             panneauDl.visibility = if (panneauDl.visibility == View.VISIBLE) View.GONE else View.VISIBLE
@@ -199,6 +244,7 @@ class MainActivity : AppCompatActivity() {
         saisie = saisie.replace("\\s+".toRegex(), " ")
         val urlFinale = quandEstCeUneUrl(saisie) ?: "${MOTEUR_RECHERCHE}${saisie.replace(" ", "+")}"
         urlVideoDetectee = null
+        urlHlsDetectee = null
         dlButton.visibility = View.GONE
         webView.loadUrl(urlFinale)
         urlInput.clearFocus()
@@ -219,10 +265,13 @@ class MainActivity : AppCompatActivity() {
     private fun lancerTelechargement(url: String) {
         try {
             val uri = Uri.parse(url)
-            val nomFichier = URLUtil.guessFileName(url, null, "video/mp4")
+            val nomFichier = when {
+                url.contains(".m3u8") -> "video_hls_${System.currentTimeMillis()}.m3u8"
+                else -> URLUtil.guessFileName(url, null, "video/*")
+            }
 
             val requete = DownloadManager.Request(uri).apply {
-                setMimeType("video/*")
+                setMimeType(if (url.contains(".m3u8")) "application/vnd.apple.mpegurl" else "video/*")
                 addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url))
                 setTitle(nomFichier)
                 setDescription("Téléchargement en cours...")
@@ -279,9 +328,7 @@ class MainActivity : AppCompatActivity() {
         Thread {
             while (surveillerActif && !isFinishing) {
                 try {
-                    telechargements.keys.toList().forEach { id ->
-                        actualiserProgression(id)
-                    }
+                    telechargements.keys.toList().forEach { actualiserProgression(it) }
                     Thread.sleep(800)
                 } catch (_: Exception) { break }
             }
@@ -341,26 +388,45 @@ class MainActivity : AppCompatActivity() {
     }
 
     private inner class ClientWeb : WebViewClient() {
-        private val BLOQUER = listOf(
-            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
-            "googletagmanager.com", "amazon-adsystem.com", "adform.net",
-            "adroll.com", "ads.", "ad.", "banner.", "popup.", "affiliate.",
-            "google-analytics.com", "analytics.", "gtag.", "ga.js", "gtm.js",
-            "beacon.", "tracking.", "track.", "utm_", "gclid=", "fbclid="
-        )
 
         override fun shouldInterceptRequest(v: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
             val url = rq?.url.toString()
             val urlMin = url.lowercase(Locale.ROOT)
 
-            for (ext in EXT_VIDEO) {
-                if (urlMin.contains(ext)) {
-                    urlVideoDetectee = url
-                    runOnUiThread { dlButton.visibility = View.VISIBLE }
+            // 🛡️ BLOCAGE PUBS EN PREMIER
+            for (pub in BLOCAGE_PUBS) {
+                if (urlMin.contains(pub)) {
+                    Log.d(TAG, "🚫 PUBS BLOQUÉE: $urlMin")
+                    return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
+                }
+            }
+
+            // 🎬 DÉTECTION HLS EN PRIORITÉ — .m3u8 d'abord
+            for (hls in MOTIFS_HLS) {
+                if (urlMin.contains(hls)) {
+                    if (urlHlsDetectee == null) {
+                        urlHlsDetectee = url
+                        runOnUiThread { dlButton.visibility = View.VISIBLE }
+                        Log.d(TAG, "🎬 HLS DÉTECTÉ: $url")
+                    }
                     break
                 }
             }
-            if (urlVideoDetectee == null) {
+
+            // 🎬 DÉTECTION VIDÉO AUTRES FORMATS
+            if (urlVideoDetectee == null && urlHlsDetectee == null) {
+                for (ext in EXT_VIDEO) {
+                    if (urlMin.contains(ext)) {
+                        urlVideoDetectee = url
+                        runOnUiThread { dlButton.visibility = View.VISIBLE }
+                        Log.d(TAG, "🎬 VIDÉO DÉTECTÉE: $url")
+                        break
+                    }
+                }
+            }
+
+            // 🎬 DÉTECTION PAR HÉBERGEUR
+            if (urlVideoDetectee == null && urlHlsDetectee == null) {
                 for (hote in HOSTS_VIDEO) {
                     if (urlMin.contains(hote)) {
                         urlVideoDetectee = url
@@ -369,17 +435,14 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-            for (pub in BLOQUER) {
-                if (urlMin.contains(pub)) {
-                    return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
-                }
-            }
+
             return super.shouldInterceptRequest(v, rq)
         }
 
         override fun onPageStarted(v: WebView?, u: String?, ic: android.graphics.Bitmap?) {
             enChargement.set(true)
             urlVideoDetectee = null
+            urlHlsDetectee = null
             runOnUiThread { dlButton.visibility = View.GONE }
             u?.let { urlInput.setText(it) }
         }
