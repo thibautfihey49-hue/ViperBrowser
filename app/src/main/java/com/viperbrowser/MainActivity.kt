@@ -58,12 +58,10 @@ class MainActivity : AppCompatActivity() {
     private val enChargement = AtomicBoolean(false)
     private var urlVideoDetectee: String? = null
 
-    // 📥 SUIVI DES TÉLÉCHARGEMENTS
     private val telechargements = ConcurrentHashMap<Long, ItemTelechargement>()
     private var gestionnaireDl: DownloadManager? = null
     private var surveillerActif = true
 
-    // 📦 STRUCTURE D'UN TÉLÉCHARGEMENT
     data class ItemTelechargement(
         val id: Long,
         val nom: String,
@@ -74,7 +72,6 @@ class MainActivity : AppCompatActivity() {
         var vue: View? = null
     )
 
-    // 📡 RÉCEPTEUR DE SUIVI EN ARRIÈRE-PLAN
     private val recepteurDl = object : BroadcastReceiver() {
         override fun onReceive(contexte: Context?, intent: Intent?) {
             val id = intent?.getLongExtra(DownloadManager.EXTRA_DOWNLOAD_ID, -1) ?: -1
@@ -105,7 +102,6 @@ class MainActivity : AppCompatActivity() {
             configurerWebView()
             configurerBoutons()
             enregistrerRecepteur()
-
             demarrerSurveillanceProgression()
 
             Log.d(TAG, "✅ PRÊT — Téléchargements complets + suivi")
@@ -220,7 +216,6 @@ class MainActivity : AppCompatActivity() {
         return null
     }
 
-    // 📥 LANCER TÉLÉCHARGEMENT AVEC REPRISE
     private fun lancerTelechargement(url: String) {
         try {
             val uri = Uri.parse(url)
@@ -229,9 +224,8 @@ class MainActivity : AppCompatActivity() {
             val requete = DownloadManager.Request(uri).apply {
                 setMimeType("video/*")
                 addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url))
-                addRequestHeader("Range", "bytes=0-") // ✅ REPRISE SI COUPURE
                 setTitle(nomFichier)
-                setDescription "Téléchargement en cours..."
+                setDescription("Téléchargement en cours...")
                 setAllowedOverMetered(true)
                 setAllowedOverRoaming(true)
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
@@ -240,12 +234,9 @@ class MainActivity : AppCompatActivity() {
             }
 
             val idDl = gestionnaireDl!!.enqueue(requete)
-
-            // ✅ AJOUTER À L'AFFICHAGE EN TEMPS RÉEL
             val item = ItemTelechargement(idDl, nomFichier)
             telechargements[idDl] = item
             ajouterVueTelechargement(item)
-
             panneauDl.visibility = View.VISIBLE
             Toast.makeText(this, "⬇ Démarré : $nomFichier", Toast.LENGTH_SHORT).show()
 
@@ -254,7 +245,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // 📋 CRÉER LIGNE DE SUIVI DANS L'INTERFACE
     private fun ajouterVueTelechargement(item: ItemTelechargement) {
         val ligne = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
@@ -282,11 +272,9 @@ class MainActivity : AppCompatActivity() {
         ligne.addView(barre)
         ligne.addView(statut)
         listeDlLayout.addView(ligne)
-
         item.vue = ligne
     }
 
-    // 🔄 SURVEILLANCE CONTINUE EN ARRIÈRE-PLAN
     private fun demarrerSurveillanceProgression() {
         Thread {
             while (surveillerActif && !isFinishing) {
@@ -294,13 +282,12 @@ class MainActivity : AppCompatActivity() {
                     telechargements.keys.toList().forEach { id ->
                         actualiserProgression(id)
                     }
-                    Thread.sleep(800) // ✅ Rafraîchir toutes les 0.8s
+                    Thread.sleep(800)
                 } catch (_: Exception) { break }
             }
         }.start()
     }
 
-    // 📊 LIRE ET METTRE À JOUR LA PROGRESSION
     private fun actualiserProgression(id: Long) {
         val requete = DownloadManager.Query().setFilterById(id)
         val curseur: Cursor? = gestionnaireDl!!.query(requete)
@@ -326,14 +313,12 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ✏️ AFFICHER LA PROGRESSION DANS L'INTERFACE
     private fun mettreAJourVue(item: ItemTelechargement) {
         val ligne = item.vue as? LinearLayout ?: return
         val barre = ligne.getChildAt(1) as? ProgressBar ?: return
         val statut = ligne.getChildAt(2) as? TextView ?: return
 
         barre.progress = item.progression
-
         statut.text = when (item.etat) {
             DownloadManager.STATUS_PENDING -> "En attente..."
             DownloadManager.STATUS_RUNNING -> "⬇ ${item.progression}% • ${formaterTaille(item.tailleCourante)}/${formaterTaille(item.taille)}"
@@ -341,9 +326,7 @@ class MainActivity : AppCompatActivity() {
             DownloadManager.STATUS_FAILED -> "❌ Échoué"
             else -> "État: ${item.etat}"
         }
-
         if (item.etat == DownloadManager.STATUS_SUCCESSFUL || item.etat == DownloadManager.STATUS_FAILED) {
-            barre.isIndeterminate = false
             statut.setTextColor(if (item.etat == DownloadManager.STATUS_SUCCESSFUL) 0xFF2E7D32.toInt() else 0xFFD32F2F.toInt())
         }
     }
@@ -352,8 +335,8 @@ class MainActivity : AppCompatActivity() {
         return when {
             octets < 1024 -> "$octets B"
             octets < 1024 * 1024 -> "${octets / 1024} KB"
-            octets < 1024 * 1024 * 1024 -> "${"%.1f".format(octets / (1024.0 * 1024.0))} MB"
-            else -> "${"%.1f".format(octets / (1024.0 * 1024.0 * 1024.0))} GB"
+            octets < 1024 * 1024 * 1024 -> "${String.format("%.1f", octets / (1024.0 * 1024.0))} MB"
+            else -> "${String.format("%.1f", octets / (1024.0 * 1024.0 * 1024.0))} GB"
         }
     }
 
