@@ -46,7 +46,7 @@ class MainActivity : AppCompatActivity() {
         private const val CANAL_NOTIF_DL = "telechargements"
         private const val PERM_STOCKAGE = 12345
 
-        // ❌ FICHIERS À IGNORER — PISTES TROMPEUSES
+        // ❌ PISTES TROMPEUSES
         private val A_IGNORER = listOf(
             "ping.gif", "tracking.gif", "beacon.gif", "pixel.gif", "stats.gif",
             "analytics.gif", "track.gif", "ad.gif", "banner.gif", "loader.gif",
@@ -74,131 +74,192 @@ class MainActivity : AppCompatActivity() {
         )
 
         // =============================================================
-        // 🛡️ BLOCAGE PUBS ULTRA-COMPLET — +15000 RÈGLES ENTIÈRES
+        // 🛡️ BLOCAGE ABSOLU — TOUTES LES RÈGLES EN UNE FOIS
         // =============================================================
 
-        // 🔴 DOMAINES PUBLICITAIRES MAJEURS
-        private val PUBS_DOMAINES = listOf(
+        // 🔴 DOMAINES PUBLICITAIRES ENTIÈREMENT BLOQUÉS
+        private val BLOCAGE_DOMAINE = setOf(
             "doubleclick.net", "googleadservices.com", "googlesyndication.com",
             "googletagmanager.com", "googletagservices.com", "amazon-adsystem.com",
             "adform.net", "adroll.com", "adtech.com", "adnxs.com", "rubiconproject.com",
             "criteo.com", "taboola.com", "outbrain.com", "pubmatic.com", "openx.net",
-            "adsystem.com", "adserver.com", "advertising.com", "adtech.net",
-            "facebook.com/tr", "facebook.com/b", "fbcdn.net/tr",
-            "scorecardresearch.com", "quantserve.com", "chartbeat.com", "hotjar.com",
-            "segment.com", "mixpanel.com", "amplitude.com", "heapanalytics.com",
-            "clicktale.net", "mouseflow.com", "fullstory.com", "newrelic.com",
-            "sentry.io", "bugsnag.com", "datadoghq.com", "logrocket.com",
-            "mediavine.com", "adthrive.com", "teads.tv", "smartadserver.com",
-            "casalemedia.com", "concert.io", "triplelift.com", "sovrn.com",
-            "lijit.com", "sharethrough.com", "distroscale.com", "revcontent.com",
-            "adblade.com", "admixer.com", "adunity.com", "adverity.com",
-            "spotxchange.com", "spotx.tv", "telaria.com", "tremorvideo.com",
-            "aniview.com", "brid.tv", "jwplayer.com/advertising", "jwplayer.com/ad",
-            "vast.ai", "vpaid.io", "ima.gg", "google.ima", "admanager.google",
-            "pagead2.googlesyndication.com", "pagead.l.doubleclick.net",
-            "adservice.google", "ads.yahoo.com", "analytics.yahoo.com",
-            "ad.a8.net", "acpmx.com", "adbrite.com", "adcentric.com",
-            "adconion.com", "adfox.ru", "adfungible.com", "adgear.com",
-            "adglare.com", "adgorithms.com", "adition.com", "adjug.com",
-            "adkernel.com", "adkrux.com", "admanmedia.com", "adman.com",
-            "admarvel.com", "admobi.com", "admoda.com", "admonetize.com",
-            "adnami.io", "adnow.com", "adnxs.com", "adology.com",
-            "adoptimizer.com", "adplx.com", "adpx.com", "adq.io",
-            "adroll.com", "adroot.ru", "adscale.de", "adserve.com",
-            "adtech.de", "adtechus.com", "adtelligent.com", "adtlg.com",
-            "adtrgt.com", "adunit.io", "adventori.com", "adveris.com",
-            "adverticum.net", "advertex.io", "advision.com", "adwily.com",
-            "adx.com", "adx.live", "adxcg.com", "adzerk.net",
-            "aerserv.com", "afp.ai", "agkn.com", "airpr.com",
-            "akamaized.net/ads", "algorix.co", "amgdgt.com", "amobee.com",
-            "anewrelic.com", "apex.travel", "appier.com", "applift.com",
-            "appnexus.com", "appodeal.com", "appsflyer.com", "aptus.com",
-            "aralego.com", "area17.com", "armasuis.com", "art19.com",
-            "atdmt.com", "auctionads.com", "aura.com", "automattic.com/track",
-            "avocet.io", "awin.com", "axp.com", "bannernow.com",
-            "beachfront.io", "beeswax.com", "betterads.com", "bidder.com",
-            "bidswitch.net", "bizon.ai", "blismedia.com", "bluekai.com",
-            "brightcove.com/ads", "btb.io", "bytedance.com/ads", "c1exchange.com",
-            "criteo.net", "connectad.io", "consensys.net/ads", "conversantmedia.com",
-            "cpmstar.com", "creative.ak.fbcdn.net", "custplace.com", "cxense.com",
-            "dable.io", "deepintent.com", "demandbase.com", "demdex.net",
-            "disqusads.com", "distillery.io", "dotomi.com", "doubleverify.com",
-            "dstillery.com", "duckdaotsu.com", "ebay.com/ads", "e-planning.net",
-            "emxdgt.com", "engageya.com", "enterscale.com", "ezoic.com",
-            "f-squared.com", "facebook.com/ads", "fairbid.com", "fanads.com",
-            "fandom.com/ads", "feedad.com", "flashtalking.com", "fmpub.net",
-            "freewheel.tv", "futuri.com", "fyber.com", "gamoshi.org",
-            "genius.com/ads", "getintent.com", "gfp.one", "githack.com/ads",
-            "globossp.com", "grapeshot.com", "gumgum.com", "h1-analytics.com",
-            "habx.com", "hive.co", "hotmart.com/ads", "hypers.com",
-            "idealmedia.com", "imrworldwide.com", "infusion.com", "inmobi.com",
-            "innity.com", "integralads.com", "intentiq.com", "iponweb.com",
-            "iprospect.com", "isocket.com", "ix.com", "jivox.com",
-            "jumboproduct.com", "kargo.com", "kedro.com", "kenshoo.com",
-            "keywee.co", "kiosked.com", "knares.com", "kochava.com",
-            "krxd.net", "l.doubleclick.net", "larky.com", "leagueanalytics.com",
-            "ligatus.com", "liveintent.com", "lkqd.net", "logical.com",
-            "lotame.com", "m1.2mdn.net", "m6r.eu", "marinsoftware.com",
-            "matomo.org", "media.net", "mediatrust.com", "meetrics.com",
-            "mercle.com", "metapex.com", "mgo2.com", "microad.net",
-            "mightyhive.com", "minutemedia.com", "mobfox.com", "moat.com",
-            "mojing.com", "monarchads.com", "mopub.com", "moreover.com",
-            "msads.net", "msn.com/ads", "mydas.jp", "narrative.io",
-            "navegg.com", "nuggad.net", "oblivious.net", "ocdm.io",
-            "omnitagjs.com", "onclick.com", "onead.com", "onnetwork.com",
-            "openpass.com", "oracle.com/ads", "outbrain.com", "overwolf.com/ads",
-            "p7.org", "parsely.com", "path.com", "paypal.com/ads",
-            "pearl.com", "perimeterx.com", "pinterest.com/ads", "piano.io",
-            "pixalate.com", "plaid.com/ads", "platform-cdn.com", "plista.com",
-            "polka.io", "prebid.org", "prisa.com", "prospectus.com",
-            "pubgears.com", "pubtech.com", "pubvantage.com", "purch.com",
-            "qontext.io", "quora.com/ads", "ramp.com", "rapidspike.com",
-            "reson8.com", "revjet.com", "rhythmone.com", "robin8.com",
-            "ru4.com", "s4c.com", "salesforce.com/ads", "samba.tv",
-            "scoopwhoop.com/ads", "scorecardresearch.com", "seenthis.com",
-            "sfr.fr/ads", "sharethrough.com", "simpli.fi", "sovrn.com",
-            "sparteo.com", "spot.im", "spotxchange.com", "springserve.com",
-            "stickyad.tv", "stroeer.com", "sulvo.com", "swoop.com",
-            "taboola.com", "taggify.net", "tapad.com", "taptap.com/ads",
-            "teads.com", "thetradedesk.com", "tribalfusion.com", "truelink.com",
-            "trustarc.com", "turn.com", "twitter.com/ads", "ucdconnect.ie/ads",
-            "unruly.co", "upsellit.com", "valueclick.com", "velocid.com",
-            "verisign.com/ads", "verticalscope.com", "videohub.tv", "vidible.tv",
-            "viralheat.com", "vungle.com", "w55c.net", "weborama.com",
-            "weborq.com", "wunderloop.com", "xandr.com", "xiti.com",
-            "yahoo.com/ads", "yandex.ru/ads", "yld.com", "yotpo.com",
-            "zedo.com", "zemanta.com", "zenaps.com", "zergnet.com",
-            "zypmedia.com", "ad.doubleclick.net", "ads.", "ad."
+            "smartadserver.com", "teads.tv", "teads.com", "teads.a", "teads.b",
+            "spotx.tv", "spotxchange.com", "spotx.qa", "freewheel.tv", "brid.tv",
+            "adstir.com", "adcolony.com", "unityads.unity3d.com", "admob.com",
+            "admanager.google.com", "ads.google.com", "pagead2.googlesyndication.com",
+            "ad.doubleclick.net", "l.doubleclick.net", "static.doubleclick.net",
+            "google-analytics.com", "analytics.google.com", "ssl.google-analytics.com",
+            "hotjar.com", "mouseflow.com", "fullstory.com", "mixpanel.com", "segment.com",
+            "quantserve.com", "scorecardresearch.com", "chartbeat.com", "newrelic.com",
+            "sentry.io", "datadoghq.com", "amplitude.com", "heapanalytics.com",
+            "crashlytics.com", "bugsnag.com", "logrocket.com", "posthog.com",
+            "conversionpixel.net", "facebook.com/tr", "facebook.com/b", "connect.facebook.net/en_US/fbevents.js",
+            "analytics.twitter.com", "ads.yahoo.com", "analytics.yahoo.com", "bing.com/bat.js",
+            "clarity.ms", "adbutler.com", "adzerk.net", "adthrive.com", "mediavine.com",
+            "triplelift.com", "sovrn.com", "lijit.com", "sharethrough.com", "revcontent.com",
+            "casalemedia.com", "concert.io", "distroscale.com", "adblade.com", "admixer.com",
+            "adunity.com", "adverity.com", "telaria.com", "tremorvideo.com", "aniview.com",
+            "jwplayer.com/ad", "jwplayer.com/ads", "ima.akamaized.net", "googleads.g.doubleclick.net",
+            "adservice.google.com", "adservice.google.fr", "adservice.googleusercontent.com",
+            "adx.google.com", "adx.l.google.com", "cm.g.doubleclick.net",
+            "partnerad.l.doubleclick.net", "www.googleadservices.com", "www.googletagmanager.com",
+            "www.google-analytics.com", "beacon.teads.tv", "pixel.teads.com", "track.teads.com",
+            "adserver.teads.com", "vpaid.teads.tv", "vast.teads.com", "preroll.teads.tv",
+            "ima.teads.tv", "delivery.teads.tv", "cdn.teads.tv", "static.teads.com",
+            "sync.teads.com", "bid.teads.tv", "exchange.teads.com", "rtb.teads.com",
+            "ad.teads.com", "adtechus.com", "adtelligent.com", "adtrgt.com", "adunit.io",
+            "adventori.com", "adveris.com", "adverticum.net", "advertex.io", "advision.com",
+            "adwily.com", "adx.live", "adxcg.com", "adzerk.net", "aerserv.com", "afp.ai",
+            "agkn.com", "akamaized.net/ads", "algorix.co", "amgdgt.com", "amobee.com",
+            "anewrelic.com", "apex.travel", "appier.com", "applift.com", "appnexus.com",
+            "appodeal.com", "appsflyer.com", "aptus.com", "aralego.com", "area17.com",
+            "art19.com", "atdmt.com", "auctionads.com", "aura.com", "automattic.com/track",
+            "avocet.io", "awin.com", "axp.com", "bannernow.com", "beachfront.io", "beeswax.com",
+            "betterads.com", "bidswitch.net", "bizon.ai", "blismedia.com", "bluekai.com",
+            "brightcove.com/ads", "btb.io", "bytedance.com/ads", "c1exchange.com", "criteo.net",
+            "connectad.io", "consensys.net/ads", "conversantmedia.com", "cpmstar.com",
+            "creative.ak.fbcdn.net", "custplace.com", "cxense.com", "dable.io", "deepintent.com",
+            "demandbase.com", "demdex.net", "disqusads.com", "distillery.io", "dotomi.com",
+            "doubleverify.com", "dstillery.com", "duckdaotsu.com", "ebay.com/ads", "e-planning.net",
+            "emxdgt.com", "engageya.com", "enterscale.com", "ezoic.com", "f-squared.com",
+            "facebook.com/ads", "fairbid.com", "fanads.com", "fandom.com/ads", "feedad.com",
+            "flashtalking.com", "fmpub.net", "freewheel.tv", "futuri.com", "fyber.com",
+            "gamoshi.org", "genius.com/ads", "getintent.com", "gfp.one", "githack.com/ads",
+            "globossp.com", "grapeshot.com", "gumgum.com", "h1-analytics.com", "habx.com",
+            "hive.co", "hotmart.com/ads", "hypers.com", "idealmedia.com", "imrworldwide.com",
+            "infusion.com", "inmobi.com", "innity.com", "integralads.com", "intentiq.com",
+            "iponweb.com", "iprospect.com", "isocket.com", "ix.com", "jivox.com", "jumboproduct.com",
+            "kargo.com", "kedro.com", "kenshoo.com", "keywee.co", "kiosked.com", "knares.com",
+            "kochava.com", "krxd.net", "larky.com", "leagueanalytics.com", "ligatus.com",
+            "liveintent.com", "lkqd.net", "logical.com", "lotame.com", "m1.2mdn.net", "m6r.eu",
+            "marinsoftware.com", "matomo.org", "media.net", "mediatrust.com", "meetrics.com",
+            "mercle.com", "metapex.com", "mgo2.com", "microad.net", "mightyhive.com", "minutemedia.com",
+            "mobfox.com", "moat.com", "mojing.com", "monarchads.com", "mopub.com", "moreover.com",
+            "msads.net", "msn.com/ads", "mydas.jp", "narrative.io", "navegg.com", "nuggad.net",
+            "oblivious.net", "ocdm.io", "omnitagjs.com", "onclick.com", "onead.com", "onnetwork.com",
+            "openpass.com", "oracle.com/ads", "outbrain.com", "overwolf.com/ads", "p7.org",
+            "parsely.com", "path.com", "paypal.com/ads", "pearl.com", "perimeterx.com",
+            "pinterest.com/ads", "piano.io", "pixalate.com", "plaid.com/ads", "platform-cdn.com",
+            "plista.com", "polka.io", "prebid.org", "prisa.com", "prospectus.com", "pubgears.com",
+            "pubtech.com", "pubvantage.com", "purch.com", "qontext.io", "quora.com/ads", "ramp.com",
+            "rapidspike.com", "reson8.com", "revjet.com", "rhythmone.com", "robin8.com", "ru4.com",
+            "s4c.com", "salesforce.com/ads", "samba.tv", "scoopwhoop.com/ads", "scorecardresearch.com",
+            "seenthis.com", "sfr.fr/ads", "sharethrough.com", "simpli.fi", "sovrn.com", "sparteo.com",
+            "spot.im", "spotxchange.com", "springserve.com", "stickyad.tv", "stroeer.com", "sulvo.com",
+            "swoop.com", "taboola.com", "taggify.net", "tapad.com", "taptap.com/ads", "teads.com",
+            "thetradedesk.com", "tribalfusion.com", "truelink.com", "trustarc.com", "turn.com",
+            "twitter.com/ads", "ucdconnect.ie/ads", "unruly.co", "upsellit.com", "valueclick.com",
+            "velocid.com", "verisign.com/ads", "verticalscope.com", "videohub.tv", "vidible.tv",
+            "viralheat.com", "vungle.com", "w55c.net", "weborama.com", "weborq.com", "wunderloop.com",
+            "xandr.com", "xiti.com", "yahoo.com/ads", "yandex.ru/ads", "yld.com", "yotpo.com",
+            "zedo.com", "zemanta.com", "zenaps.com", "zergnet.com", "zypmedia.com", "ad.", "ads."
         )
 
-        // 🔴 MOTIFS DE CHEMIN / NOM DE FICHIER PUBLICITAIRES
-        private val PUBS_MOTIFS = listOf(
-            "/ad/", "/ads/", "/adx/", "/adserver/", "/ad-serving/", "/advert/",
-            "/advertisement/", "/banner/", "/banners/", "/pop/", "/popup/",
-            "/popunder/", "/preroll/", "/midroll/", "/postroll/", "/vast/",
-            "/vpaid/", "/ima/", "/admanager/", "/adexchange/", "/analytics/",
-            "/tracking/", "/tracker/", "/beacon/", "/pixel/", "/stats/",
-            "/gtm.js", "/ga.js", "/gtag.js", "/fbq.js", "/pixel.js",
-            "/analytics.js", "/tracking.js", "/beacon.js", "/stats.js",
-            "/advert.js", "/ad.js", "/ads.js", "/vast.js", "/vpaid.js",
-            "/ima.js", "/companion.js", "/preroll.js", "/adplayer.js",
-            "ad.", "ads.", "ad-", "_ad.", "-ad.", ".ad.", ".ads.",
-            "banner.", "popup.", "popunder.", "preroll.", "vast.", "vpaid.",
-            "advert.", "advertising.", "tracking.", "beacon.", "pixel.",
-            "analytics.", "affiliate.", "sponsor.", "promo.", "promotion.",
-            "utm_", "gclid=", "fbclid=", "yclid=", "mc_eid=", "mc_cid=",
-            "gbraid=", "wbraid=", "ad_status=", "adposition=", "adunit=",
-            "ad_slot=", "ad_container", "adwrapper", "ad-placeholder",
-            "ad-banner", "ad-banner-", "ad_container_", "div-ad-", "div_ad_"
+        // 🔴 MOTIFS DE CHEMIN / FICHIER PUBLICITAIRES
+        private val BLOCAGE_MOTIF = setOf(
+            "/ad.", "/ad-", "/_ad/", "/ads.", "/ads-", "/ads/", "/adx/", "/adserver/",
+            "/advert/", "/advertisement/", "/banner/", "/banners/", "/pop/", "/popup/",
+            "/popunder/", "/preroll/", "/midroll/", "/postroll/", "/vast/", "/vpaid/",
+            "/ima/", "/admanager/", "/adexchange/", "/analytics/", "/tracking/", "/tracker/",
+            "/beacon/", "/pixel/", "/stats/", "/gtm.js", "/ga.js", "/gtag.js", "/fbq.js",
+            "/pixel.js", "/analytics.js", "/tracking.js", "/beacon.js", "/stats.js",
+            "/advert.js", "/ad.js", "/ads.js", "/vast.js", "/vpaid.js", "/ima.js",
+            "/companion.js", "/preroll.js", "/adplayer.js", "/ad-serving/", "/ad-tech/",
+            "/adnetwork/", "/ad-banner/", "/ad-popup/", "/ad-container/", "/ad-wrapper/",
+            "/ad-placeholder/", "/ad-banner-", "/ad_container_", "/div-ad-", "/div_ad_",
+            "ad.", "ads.", "ad-", "_ad.", "-ad.", ".ad.", ".ads.", "ad_", "_ad_",
+            "banner.", "popup.", "popunder.", "preroll.", "vast.", "vpaid.", "ima.",
+            "advert.", "advertising.", "tracking.", "beacon.", "pixel.", "analytics.",
+            "affiliate.", "sponsor.", "promo.", "promotion.", "adstatus=", "adposition=",
+            "adunit=", "ad_slot=", "ad_container=", "ad_wrapper=", "ad_format=", "ad_type=",
+            "ad_size=", "ad_width=", "ad_height=", "ad_page=", "ad_url=", "ad_ref=",
+            "ad_zone=", "ad_block=", "ad_div=", "ad_id=", "ad_client=", "ad_slot_id=",
+            "ad_query=", "ad_keyword=", "ad_campaign=", "ad_group=", "ad_creative=",
+            "vast_url=", "vpaid_url=", "ad_tag=", "ad_url=", "ad_source=", "ad_network=",
+            "preroll_ad=", "midroll_ad=", "postroll_ad=", "ad_video=", "video_ad=",
+            "ima_sdk.js", "google.ima", "MediaFile", "VASTAdTagURI", "AdWrapper",
+            "LinearAd", "NonLinearAd", "CompanionAd", "AdSystem", "AdTitle", "AdDescription",
+            "Impression", "ClickThrough", "ClickTracking", "VideoClicks", "MediaFiles",
+            "vast.xml", "vpaid.js", "adTagUrl", "ad_tag_url", "vastUrl", "vpaidUrl",
+            "prerollUrl", "adUrl", "advertUrl", "adServerUrl", "ad_request_url",
+            "jwplayer.ads", "jwplayer.advertising", "jwplayer.preroll", "jwplayer.vast",
+            "jwplayer.vpaid", "jwplayer.ima", "jwplayer.ad", "jwplayer_ad", "jwplayerAds",
+            "clickad", "clickAd", "showAd", "show_ads", "loadAd", "loadAds", "getAd",
+            "getAds", "displayAd", "displayAds", "renderAd", "renderAds", "serveAd",
+            "serveAds", "fetchAd", "fetchAds", "requestAd", "requestAds", "adClick",
+            "adImpression", "adView", "adShown", "adDisplayed", "adContainer", "adWrapper"
         )
 
-        // 🔴 TYPES MIME PUBLICITAIRES / PREROLL VIDÉO
-        private val PUBS_MIME = listOf(
-            "application/x-vast", "application/vast+xml", "application/vpaid",
-            "video/x-mpegurl-ad", "application/x-mpegurl-ad", "text/track-event",
-            "image/gif;ads", "application/javascript;ads"
+        // 🔴 PARAMÈTRES DE SUIVI À SUPPRIMER DES URLS
+        private val PARAMS_SUIVI = setOf(
+            "gclid", "fbclid", "yclid", "mc_eid", "mc_cid", "gbraid", "wbraid",
+            "utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content",
+            "utm_name", "utm_id", "utm_keyword", "utm_group", "ad_id", "adid",
+            "cid", "client_id", "session_id", "tracking_id", "trackid", "ref",
+            "referrer", "source", "medium", "campaign", "keyword", "term", "content"
         )
+
+        // 🔴 INJECTION JS — SUPPRESSION TOTALE DES PUBS DANS LA PAGE
+        private val JS_PARAGE_COMPLET = """
+            (function(){
+                'use strict';
+                // 1. Supprimer TOUS les éléments contenant "ad" / "pub" / "banner"
+                const motsPubs = ['ad','ads','ad-','ad_','pub','pub-','pub_','banner','popup',
+                                  'popunder','preroll','vast','vpaid','ima','advert','sponsor',
+                                  'promo','teads','adserver','adContainer','adWrapper','adBox',
+                                  'adInner','adContent','adFrame','adBanner','adBlock','adUnit',
+                                  'adSlot','adZone','adSpace','adSection','adDiv','adIframe',
+                                  'adScript','adVideo','adPlayer','adOverlay','adLayer','adMask',
+                                  'adBackdrop','adModal','adDialog','adFull','adInterstitial',
+                                  'adText','adLink','adImage','adMedia','adCompanion','adDisplay'];
+                for(let mot of motsPubs){
+                    try{
+                        document.querySelectorAll('[id*="'+mot+'"],[class*="'+mot+'"],[name*="'+mot+'"]').forEach(el=>{
+                            el.remove(); el.style.display='none'; el.innerHTML=''; el.src='about:blank';
+                        });
+                    }catch(e){}
+                }
+                // 2. Supprimer TOUS les scripts publicitaires
+                const scriptsPubs = [/ad[s]?\.js/i, /vast\.js/i, /vpaid\.js/i, /ima\.js/i, /preroll\.js/i,
+                                     /gtag\.js/i, /gtm\.js/i, /ga\.js/i, /analytics\.js/i, /fbq\.js/i,
+                                     /pixel\.js/i, /beacon\.js/i, /teads\.js/i, /advert\.js/i];
+                document.querySelectorAll('script').forEach(s=>{
+                    if(s.src){
+                        for(let r of scriptsPubs){
+                            if(r.test(s.src)){try{s.remove();}catch(e){}}
+                        }
+                    }
+                });
+                // 3. Supprimer TOUS les iframes publicitaires
+                document.querySelectorAll('iframe').forEach(iframe=>{
+                    const src = iframe.src.toLowerCase();
+                    if(src.includes('ad')||src.includes('vast')||src.includes('vpaid')||
+                       src.includes('ima')||src.includes('doubleclick')||src.includes('teads')||
+                       src.includes('ads')||src.includes('banner')||src.includes('popup')){
+                        try{iframe.remove();}catch(e){}
+                    }
+                });
+                // 4. DÉSACTIVER COMPLÈTEMENT LES API PUBLICITAIRES
+                try{window.gtag=()=>{};window.ga=()=>{};window.fbq=()=>{};window.ima=undefined;
+                    window.google=window.google||{};window.google.ima=undefined;
+                    window.google_tag_manager=undefined;window.__ga=undefined;
+                    window.dataLayer=[];window._gaq=[];window.gaGlobal=undefined;
+                    window.teads=undefined;window.Teads=undefined;window.vast=undefined;
+                    window.vpaid=undefined;window.preroll=undefined;window.AdManager=undefined;
+                    window.AdSense=undefined;window.Ads=undefined;window.Ad=undefined;
+                    window.getAds=()=>[];window.showAds=()=>{};window.loadAds=()=>{};
+                    window.requestAds=()=>{};window.displayAds=()=>{};window.renderAds=()=>{};
+                }catch(e){}
+                // 5. BLOQUER LES REDIRECTIONS PUBS
+                const ouvrir = window.open;
+                window.open = function(u,t,w){
+                    if(u&&(u.includes('ad')||u.includes('vast')||u.includes('teads')||
+                       u.includes('doubleclick')||u.includes('ads'))) return null;
+                    return ouvrir.call(window,u,t,w);
+                };
+                console.log('✅ BLOCAGE PUBS ACTIF — API désactivées + éléments supprimés');
+            })();
+        """.trimIndent()
     }
 
     private lateinit var webView: WebView
@@ -257,7 +318,7 @@ class MainActivity : AppCompatActivity() {
             enregistrerRecepteur()
             demarrerSurveillanceProgression()
 
-            Log.d(TAG, "✅ BLOCAGE PUBS ULTRA — +15000 RÈGLES ACTIF")
+            Log.d(TAG, "🛡️ BLOCAGE ABSOLU — VERSION FINALE")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
@@ -300,6 +361,16 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    private fun nettoyerUrlSuivi(url: String): String {
+        if (!url.contains("?")) return url
+        val base = url.substringBefore("?")
+        val params = url.substringAfter("?").split("&").filter { param ->
+            val cle = param.substringBefore("=").lowercase(Locale.ROOT)
+            cle !in PARAMS_SUIVI
+        }
+        return if (params.isNotEmpty()) "$base?${params.joinToString("&")}" else base
+    }
+
     private fun configurerWebView() {
         val r = webView.settings
         r.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
@@ -307,7 +378,7 @@ class MainActivity : AppCompatActivity() {
         r.javaScriptEnabled = true
         r.loadsImagesAutomatically = true
         r.mediaPlaybackRequiresUserGesture = false
-        r.javaScriptCanOpenWindowsAutomatically = true
+        r.javaScriptCanOpenWindowsAutomatically = false
         r.userAgentString = "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
         r.useWideViewPort = true
         r.loadWithOverviewMode = true
@@ -317,6 +388,8 @@ class MainActivity : AppCompatActivity() {
         r.displayZoomControls = false
         r.allowFileAccess = false
         r.allowContentAccess = false
+        r.blockNetworkImage = false
+        r.blockNetworkLoads = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) r.setGeolocationEnabled(false)
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
@@ -501,19 +574,19 @@ class MainActivity : AppCompatActivity() {
 
     private inner class ClientWeb : WebViewClient() {
 
-        // 🛡️ FONCTION DE BLOCAGE ULTRA — 3 NIVEAUX
-        private fun estPub(url: String, urlMin: String): Boolean {
-            // NIVEAU 1 — Domaine publicitaire connu
-            for (domaine in PUBS_DOMAINES) {
+        // 🛡️ BLOCAGE ABSOLU — TOUS LES NIVEAUX
+        private fun estBloque(urlMin: String): Boolean {
+            // NIVEAU 1 — Domaine entier
+            for (domaine in BLOCAGE_DOMAINE) {
                 if (urlMin.contains(domaine)) {
-                    Log.d(TAG, "🚫 PUBS [DOMAINE]: $domaine → $urlMin")
+                    Log.d(TAG, "🚫 BLOQUÉ [DOMAINE]: $domaine")
                     return true
                 }
             }
-            // NIVEAU 2 — Chemin / nom de fichier publicitaire
-            for (motif in PUBS_MOTIFS) {
+            // NIVEAU 2 — Motif dans l'URL
+            for (motif in BLOCAGE_MOTIF) {
                 if (urlMin.contains(motif)) {
-                    Log.d(TAG, "🚫 PUBS [MOTIF]: $motif → $urlMin")
+                    Log.d(TAG, "🚫 BLOQUÉ [MOTIF]: $motif")
                     return true
                 }
             }
@@ -532,8 +605,8 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // 🛡️ BLOCAGE PUBS — 3 NIVEAUX
-            if (estPub(url, urlMin)) {
+            // 🛡️ BLOCAGE ABSOLU
+            if (estBloque(urlMin)) {
                 return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
             }
 
@@ -578,8 +651,13 @@ class MainActivity : AppCompatActivity() {
 
         override fun onPageFinished(v: WebView?, url: String?) {
             enChargement.set(false)
+
+            // 🛡️ PARAGE COMPLET DE LA PAGE — SUPPRIME PUBS + DÉSACTIVE API
+            v?.evaluateJavascript(JS_PARAGE_COMPLET, null)
+
+            // 🎬 RECHERCHE VIDÉO DANS LE CODE DE LA PAGE
             url?.let {
-                val delais = listOf(1200L, 2500L, 4000L)
+                val delais = listOf(800L, 1800L, 3200L)
                 delais.forEachIndexed { index, delai ->
                     Thread {
                         Thread.sleep(delai)
