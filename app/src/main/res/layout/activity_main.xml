@@ -5,6 +5,7 @@
     android:orientation="vertical"
     android:background="#F8F9FA">
 
+    <!-- BARRE URL -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -50,13 +51,60 @@
             android:textColor="#FFFFFF"
             android:backgroundTint="#FF9800"
             android:layout_marginStart="6dp"
-            android:padding="0dp"
-            android:visibility="gone"/>
+            android:padding="0dp"/>
+
+        <Button
+            android:id="@+id/listeDlButton"
+            android:layout_width="42dp"
+            android:layout_height="42dp"
+            android:text="📋"
+            android:textSize="14sp"
+            android:textColor="#FFFFFF"
+            android:backgroundTint="#4CAF50"
+            android:layout_marginStart="6dp"
+            android:padding="0dp"/>
     </LinearLayout>
 
+    <!-- PANNEAU TÉLÉCHARGEMENTS (CACHÉ PAR DÉFAUT) -->
+    <LinearLayout
+        android:id="@+id/panneauTelechargements"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="8dp"
+        android:background="#FFFFFF"
+        android:elevation="4dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="📥 Téléchargements en cours"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:padding="8dp"
+            android:gravity="center"
+            android:background="#E8F5E9"/>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:maxHeight="220dp">
+
+            <LinearLayout
+                android:id="@+id/listeTelechargements"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="4dp"/>
+        </ScrollView>
+    </LinearLayout>
+
+    <!-- WEBVIEW -->
     <WebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
 
 </LinearLayout>
