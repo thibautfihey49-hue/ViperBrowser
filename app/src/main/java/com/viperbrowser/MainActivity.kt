@@ -57,16 +57,18 @@ class MainActivity : AppCompatActivity() {
             dlButton = findViewById(R.id.dlButton)
             webView = findViewById(R.id.webView)
 
+            // ✅ BARRE COMPLÈTEMENT VIDE — RIEN NE S'AFFICHE
             urlInput.text.clear()
             urlInput.hint = "Rechercher ou entrer une URL..."
 
             verifierPermissions()
-            configurerWebView()
+            configurerWebViewUltraRapide()
             configurerBoutons()
 
-            webView.loadUrl("about:blank")
+            // ✅ AUCUN about:blank CHARGÉ — WebView reste vide
+            // On NE FAIT PAS de loadUrl au démarrage !
 
-            Log.d(TAG, "✅ PRÊT — Barre vide + Vitesse max + Vidéo OK")
+            Log.d(TAG, "✅ PRÊT — Barre vide + Vidéos ultra-rapides")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
@@ -84,25 +86,24 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun configurerWebView() {
+    // ⚡ TOUT OPTIMISÉ POUR LA VITESSE — VIDÉOS ET PAGES
+    private fun configurerWebViewUltraRapide() {
         val r = webView.settings
 
-        // ⚡ VITESSE MAX
-        r.cacheMode = WebSettings.LOAD_DEFAULT
-        r.domStorageEnabled = true
-        r.databaseEnabled = false
+        // ⚡ CACHE D'ABORD PUIS RÉSEAU — CHARGEMENT INSTANTANÉ
+        r.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
 
-        // 🎬 VIDÉOS — RÉGLAGES ESSENTIELS
+        // 🎬 VIDÉOS — TOUT ACTIVÉ POUR DÉMARRER PLUS VITE
         r.javaScriptEnabled = true
         r.loadsImagesAutomatically = true
-        r.mediaPlaybackRequiresUserGesture = false
+        r.mediaPlaybackRequiresUserGesture = false  // ✅ LANCE LA VIDÉO SANS CLIC
         r.javaScriptCanOpenWindowsAutomatically = true
         r.domStorageEnabled = true
 
-        // 📋 COMPATIBILITÉ SITES
-        r.userAgentString = "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+        // 📋 AGENT COMPATIBLE TOUS SITES
+        r.userAgentString = "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-        // 📐 MISE EN PAGE
+        // 📐 AFFICHAGE RAPIDE
         r.useWideViewPort = true
         r.loadWithOverviewMode = true
         r.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
@@ -114,20 +115,20 @@ class MainActivity : AppCompatActivity() {
         r.builtInZoomControls = true
         r.displayZoomControls = false
 
-        // 🔒 SÉCURITÉ + COMPATIBILITÉ
+        // 🔒 SÉCURITÉ
         r.allowFileAccess = false
         r.allowContentAccess = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             r.setGeolocationEnabled(false)
         }
 
-        // 🎨 ACCÉLÉRATION GRAPHIQUE
+        // 🎨 ACCÉLÉRATION GPU — VIDÉOS FLUIDES
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
 
-        // 🍪 COOKIES
+        // 🍪 COOKIES — SITES SE CHARGENT BIEN
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
 
