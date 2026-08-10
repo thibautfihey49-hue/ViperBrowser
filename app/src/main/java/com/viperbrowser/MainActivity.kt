@@ -57,7 +57,6 @@ class MainActivity : AppCompatActivity() {
             dlButton = findViewById(R.id.dlButton)
             webView = findViewById(R.id.webView)
 
-            // ✅ BARRE D'ADRESSE VIDE AU DÉMARRAGE — RIEN AFFICHÉ
             urlInput.text.clear()
             urlInput.hint = "Rechercher ou entrer une URL..."
 
@@ -65,7 +64,6 @@ class MainActivity : AppCompatActivity() {
             configurerWebView()
             configurerBoutons()
 
-            // ✅ PAGE VIDE SANS CHARGER GOOGLE AU DÉMARRAGE
             webView.loadUrl("about:blank")
 
             Log.d(TAG, "✅ PRÊT — Barre vide + Vitesse max + Vidéo OK")
@@ -86,29 +84,25 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // ⚡ TOUS LES PARAMÈTRES POUR VITESSE MAX + VIDÉOS LISIBLES
     private fun configurerWebView() {
         val r = webView.settings
 
-        // ⚡ VITESSE MAX — D'ABORD CACHE PUIS RÉSEAU
+        // ⚡ VITESSE MAX
         r.cacheMode = WebSettings.LOAD_DEFAULT
         r.domStorageEnabled = true
         r.databaseEnabled = false
-        r.setAppCacheEnabled(true)
-        r.appCachePath = cacheDir.absolutePath
 
-        // 🎬 VIDÉOS — TOUS LES RÉGLAGES POUR LIRE SANS PROBLÈME
+        // 🎬 VIDÉOS — RÉGLAGES ESSENTIELS
         r.javaScriptEnabled = true
         r.loadsImagesAutomatically = true
         r.mediaPlaybackRequiresUserGesture = false
         r.javaScriptCanOpenWindowsAutomatically = true
-        r.setPluginState(WebSettings.PluginState.ON)
         r.domStorageEnabled = true
 
-        // 📋 COMPATIBILITÉ SITES — AGENT UTILISATEUR STANDARD
+        // 📋 COMPATIBILITÉ SITES
         r.userAgentString = "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
 
-        // 📐 MISE EN PAGE — S'AFFICHE BIEN SUR TOUS LES SITES
+        // 📐 MISE EN PAGE
         r.useWideViewPort = true
         r.loadWithOverviewMode = true
         r.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
@@ -123,18 +117,17 @@ class MainActivity : AppCompatActivity() {
         // 🔒 SÉCURITÉ + COMPATIBILITÉ
         r.allowFileAccess = false
         r.allowContentAccess = false
-        r.allowUniversalAccessFromFileURLs = false
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             r.setGeolocationEnabled(false)
         }
 
-        // 🎨 ACCÉLÉRATION GRAPHIQUE — VIDÉOS FLUIDES
+        // 🎨 ACCÉLÉRATION GRAPHIQUE
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
 
-        // 🍪 COOKIES — SITES SE CHARGENT BIEN
+        // 🍪 COOKIES
         CookieManager.getInstance().setAcceptCookie(true)
         CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
 
@@ -162,14 +155,11 @@ class MainActivity : AppCompatActivity() {
     private fun chargerOuRechercher() {
         var saisie = urlInput.text.toString().trim()
         if (saisie.isBlank()) return
-
         saisie = saisie.replace("\\s+".toRegex(), " ")
         val urlFinale = quandEstCeUneUrl(saisie) ?: "${MOTEUR_RECHERCHE}${saisie.replace(" ", "+")}"
-
         urlVideoDetectee = null
         dlButton.visibility = View.GONE
         webView.loadUrl(urlFinale)
-
         urlInput.clearFocus()
         val clavier = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
         clavier.hideSoftInputFromWindow(urlInput.windowToken, 0)
@@ -189,7 +179,6 @@ class MainActivity : AppCompatActivity() {
         try {
             val uri = Uri.parse(url)
             val nomFichier = URLUtil.guessFileName(url, null, "video/mp4")
-
             val requete = DownloadManager.Request(uri).apply {
                 setMimeType("video/*")
                 addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url))
@@ -199,11 +188,9 @@ class MainActivity : AppCompatActivity() {
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomFichier)
             }
-
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
             dm.enqueue(requete)
             Toast.makeText(this, "⬇ Téléchargement démarré", Toast.LENGTH_LONG).show()
-
         } catch (e: Exception) {
             Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
         }
@@ -222,7 +209,6 @@ class MainActivity : AppCompatActivity() {
             val url = rq?.url.toString()
             val urlMin = url.lowercase(Locale.ROOT)
 
-            // 🎬 DÉTECTION VIDÉO
             for (ext in EXT_VIDEO) {
                 if (urlMin.contains(ext)) {
                     urlVideoDetectee = url
@@ -239,8 +225,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
-
-            // 🚫 BLOCAGE PUBLICITÉ
             for (pub in BLOQUER) {
                 if (urlMin.contains(pub)) {
                     return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
