@@ -3,102 +3,86 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="#F8F9FA">
+    android:background="#FFFFFF">
 
-    <!-- BARRE URL -->
+    <!-- BARRE D'URL + BOUTONS -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:padding="6dp"
-        android:background="#FFFFFF"
-        android:elevation="2dp">
+        android:padding="4dp"
+        android:gravity="center_vertical"
+        android:background="#F0F0F0">
 
         <EditText
-            android:id="@+id/urlInput"
+            android:id="@+id/urlBar"
             android:layout_width="0dp"
-            android:layout_height="42dp"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:hint="Rechercher ou entrer une URL..."
-            android:inputType="textUri|textNoSuggestions"
-            android:imeOptions="actionGo"
+            android:inputType="textUri"
             android:singleLine="true"
-            android:textSize="15sp"
-            android:paddingStart="14dp"
-            android:paddingEnd="8dp"
-            android:background="#F1F3F4"
-            android:textColor="#202124"
-            android:textColorHint="#80868B"
-            android:text=""/>
+            android:padding="8dp"
+            android:background="#FFFFFF"
+            android:textSize="14sp"/>
 
         <Button
-            android:id="@+id/goButton"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:text="➜"
-            android:textSize="16sp"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#2196F3"
-            android:layout_marginStart="6dp"
-            android:padding="0dp"/>
-
-        <Button
-            android:id="@+id/dlButton"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:text="⬇"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#FF9800"
-            android:layout_marginStart="6dp"
-            android:padding="0dp"/>
-
-        <Button
-            android:id="@+id/listeDlButton"
-            android:layout_width="42dp"
-            android:layout_height="42dp"
-            android:text="📋"
-            android:textSize="14sp"
-            android:textColor="#FFFFFF"
-            android:backgroundTint="#4CAF50"
-            android:layout_marginStart="6dp"
-            android:padding="0dp"/>
+            android:id="@+id/btnGo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="→"
+            android:textSize="12sp"
+            android:minWidth="40dp"
+            android:padding="4dp"/>
     </LinearLayout>
 
-    <!-- PANNEAU TÉLÉCHARGEMENTS (CACHÉ PAR DÉFAUT) -->
+    <!-- BARRE DE NAVIGATION -->
     <LinearLayout
-        android:id="@+id/panneauTelechargements"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="8dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp"
-        android:visibility="gone">
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#E8E8E8"
+        android:padding="2dp">
 
-        <TextView
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btnBack"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="📥 Téléchargements en cours"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:padding="8dp"
-            android:gravity="center"
-            android:background="#E8F5E9"/>
+            android:layout_weight="1"
+            android:text="◀"
+            android:textSize="10sp"
+            android:padding="2dp"/>
 
-        <ScrollView
-            android:layout_width="match_parent"
+        <Button
+            android:id="@+id/btnForward"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:maxHeight="220dp">
+            android:layout_weight="1"
+            android:text="▶"
+            android:textSize="10sp"
+            android:padding="2dp"/>
 
-            <LinearLayout
-                android:id="@+id/listeTelechargements"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:padding="4dp"/>
-        </ScrollView>
+        <Button
+            android:id="@+id/btnRefresh"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="↻"
+            android:textSize="10sp"
+            android:padding="2dp"/>
     </LinearLayout>
+
+    <!-- BARRE DE PROGRESSION -->
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:max="100"
+        android:progress="0"
+        android:visibility="gone"
+        android:progressTint="#2196F3"/>
 
     <!-- WEBVIEW -->
     <WebView
