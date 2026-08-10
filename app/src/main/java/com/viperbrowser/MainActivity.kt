@@ -36,6 +36,7 @@ import java.io.ByteArrayInputStream
 import java.util.Locale
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
 
@@ -45,51 +46,39 @@ class MainActivity : AppCompatActivity() {
         private const val CANAL_NOTIF_DL = "telechargements"
         private const val PERM_STOCKAGE = 12345
 
-        // 🎬 DÉTECTION VIDÉO — HLS EN PREMIER + TOUS FORMATS
-        private val EXT_VIDEO = listOf(
-            ".m3u8", ".m3u8?", "/m3u8/", ".mp4", ".webm", ".avi", ".mov", ".mkv",
-            ".flv", ".mpd", ".ts", ".m4v", ".3gp", ".ogg", ".ogv", ".wmv", ".asf"
-        )
+        // 🎬 HLS EN PREMIER + TOUS FORMATS VIDÉO
         private val MOTIFS_HLS = listOf(
-            ".m3u8", "index.m3u8", "playlist.m3u8", "master.m3u8", "manifest.m3u8",
-            "/hls/", "/m3u8/", "/live/", "/stream/", "fileSequence", ".ts?", ".m3u8"
+            ".m3u8", "index.m3u8", "master.m3u8", "playlist.m3u8",
+            "/hls/", "/m3u8/", "/live/", "/stream/", ".m3u8?"
+        )
+        private val EXT_VIDEO = listOf(
+            ".mp4", ".webm", ".avi", ".mov", ".mkv", ".flv", ".mpd",
+            ".ts", ".m4v", ".3gp", ".ogg", ".ogv", ".wmv", ".asf"
         )
         private val HOSTS_VIDEO = listOf(
             "youtube.com", "youtu.be", "vimeo.com", "dailymotion.com", "twitch.tv",
             "googlevideo.com", "ytimg.com", "vimeocdn.com", "akamaihd.net",
             "fb.watch", "facebook.com/video", "instagram.com/reel", "tiktok.com",
-            "x.com/video", "bilibili.com", "nicovideo.jp", "video.", "watch",
-            "player", "embed", "stream", "cdn.v", "vod.", "media.", "live."
+            "bilibili.com", "nicovideo.jp", "jwplayer", "video.", "watch",
+            "player", "embed", "stream", "cdn.v", "vod.", "media.", "live.",
+            "flemmix.me", "streamtape", "vidoza", "doodstream", "voe.sx",
+            "rabbitstream", "uqload", "mega.nz", "streaming", "serveur"
         )
         private val MOTS_VIDEO = listOf(
             ".m3u8", "video/MP2T", "application/x-mpegURL", "vnd.apple.mpegurl",
-            "video-src", "source src=", "videoUrl", "contentUrl", "\"url\"",
-            "videoplayback", "manifest.mpd", "/v/", "/watch/", "/embed/", "blob:http"
+            "videoUrl", "contentUrl", "source src=", "\"url\"", "\"video\"",
+            "videoplayback", "manifest.mpd", "/v/", "/watch/", "/embed/",
+            "blob:http", "fileSequence", ".mp4", "jwplayer.config", "sources"
         )
 
-        // 🛡️ BLOCAGE PUBS ULTRA COMPLET
+        // 🛡️ BLOCAGE PUBS ULTRA
         private val BLOCAGE_PUBS = listOf(
             "doubleclick.net", "googleadservices.com", "googlesyndication.com",
-            "googletagmanager.com", "googletagservices.com", "amazon-adsystem.com",
-            "adform.net", "adroll.com", "adtech.com", "adnxs.com", "rubiconproject.com",
-            "criteo.com", "taboola.com", "outbrain.com", "pubmatic.com", "openx.net",
-            "adsystem.com", "adserver.com", "advertising.com", "adtech.net",
-            "facebook.com/tr", "facebook.com/b", "fbcdn.net/tr", "analytics",
-            "scorecardresearch.com", "quantserve.com", "chartbeat.com", "hotjar.com",
-            "segment.com", "mixpanel.com", "amplitude.com", "heapanalytics.com",
-            "clicktale.net", "mouseflow.com", "fullstory.com", "newrelic.com",
-            "sentry.io", "bugsnag.com", "datadoghq.com", "logrocket.com",
-            "ads.", ".ads.", "/ad/", "/ads/", "ad.", "ad-", "_ad.", "-ad.",
-            "banner.", "popup.", "popunder.", "affiliate.", "sponsor.", "promo.",
-            "beacon.", "tracking.", "track.", "stats.", "metrics.", "telemetry.",
-            "gtag.", "ga.js", "gtm.js", "fbq.", "pixel.", "utm_", "gclid=", "fbclid=",
-            "pagead2.", "pagead/", "adstatus.", "adx.", "adsbygoogle", "adsense",
-            "mediavine.com", "adthrive.com", "teads.tv", "smartadserver.com",
-            "casalemedia.com", "concert.io", "triplelift.com", "sovrn.com",
-            "lijit.com", "sharethrough.com", "distroscale.com", "revcontent.com",
-            "adblade.com", "admixer.com", "adunity.com", "adverity.com",
-            "video-ad.", "preroll.", "midroll.", "postroll.", "vast.", "vpaid.",
-            "ima.js", "google.ima", "admanager", "adexchange", "pubads", "gpt.js"
+            "googletagmanager.com", "amazon-adsystem.com", "adform.net",
+            "adroll.com", "adnxs.com", "criteo.com", "taboola.com",
+            "ads.", "/ad/", "/ads/", "ad.", "banner.", "popup.",
+            "beacon.", "tracking.", "gtag.", "ga.js", "gclid=", "fbclid=",
+            "vast.", "vpaid.", "ima.js", "google.ima", "admanager"
         )
     }
 
@@ -103,6 +92,7 @@ class MainActivity : AppCompatActivity() {
     private val enChargement = AtomicBoolean(false)
     private var urlVideoDetectee: String? = null
     private var urlHlsDetectee: String? = null
+    private var premiereDetection = true
 
     private val telechargements = ConcurrentHashMap<Long, ItemTelechargement>()
     private var gestionnaireDl: DownloadManager? = null
@@ -148,7 +138,7 @@ class MainActivity : AppCompatActivity() {
             enregistrerRecepteur()
             demarrerSurveillanceProgression()
 
-            Log.d(TAG, "✅ PRÊT — HLS détecté en premier + Blocage pubs ultra")
+            Log.d(TAG, "✅ PRÊT — Détection JWPlayer + HLS + sites cachés")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
@@ -158,7 +148,6 @@ class MainActivity : AppCompatActivity() {
     private fun creerCanalNotification() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val canal = NotificationChannel(CANAL_NOTIF_DL, "Téléchargements", NotificationManager.IMPORTANCE_LOW)
-            canal.description = "Suivi des téléchargements"
             val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.createNotificationChannel(canal)
         }
@@ -167,7 +156,6 @@ class MainActivity : AppCompatActivity() {
     private fun enregistrerRecepteur() {
         val filtre = IntentFilter().apply {
             addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE)
-            addAction(DownloadManager.ACTION_NOTIFICATION_CLICKED)
         }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(recepteurDl, filtre, RECEIVER_NOT_EXPORTED)
@@ -225,7 +213,7 @@ class MainActivity : AppCompatActivity() {
         dlButton.setOnClickListener {
             val urlCible = urlHlsDetectee ?: urlVideoDetectee
             urlCible?.let { lancerTelechargement(it) }
-                ?: Toast.makeText(this, "Aucune vidéo/HLS détectée", Toast.LENGTH_SHORT).show()
+                ?: Toast.makeText(this, "Aucune vidéo détectée", Toast.LENGTH_SHORT).show()
         }
         listeDlButton.setOnClickListener {
             panneauDl.visibility = if (panneauDl.visibility == View.VISIBLE) View.GONE else View.VISIBLE
@@ -245,6 +233,7 @@ class MainActivity : AppCompatActivity() {
         val urlFinale = quandEstCeUneUrl(saisie) ?: "${MOTEUR_RECHERCHE}${saisie.replace(" ", "+")}"
         urlVideoDetectee = null
         urlHlsDetectee = null
+        premiereDetection = true
         dlButton.visibility = View.GONE
         webView.loadUrl(urlFinale)
         urlInput.clearFocus()
@@ -256,7 +245,7 @@ class MainActivity : AppCompatActivity() {
         val u = s.trim().lowercase(Locale.ROOT)
         if (u.startsWith("http://") || u.startsWith("https://")) return s
         if (u.startsWith("www.")) return "https://$s"
-        val domaines = listOf(".com", ".fr", ".net", ".org", ".io", ".app", ".dev")
+        val domaines = listOf(".com", ".fr", ".net", ".org", ".io", ".app", ".dev", ".me")
         for (ext in domaines) if (u.contains(ext)) return "https://$s"
         if (u.contains(".") && !u.contains(" ")) return "https://$s"
         return null
@@ -267,16 +256,20 @@ class MainActivity : AppCompatActivity() {
             val uri = Uri.parse(url)
             val nomFichier = when {
                 url.contains(".m3u8") -> "video_hls_${System.currentTimeMillis()}.m3u8"
+                url.contains(".mpd") -> "video_dash_${System.currentTimeMillis()}.mpd"
                 else -> URLUtil.guessFileName(url, null, "video/*")
             }
 
             val requete = DownloadManager.Request(uri).apply {
-                setMimeType(if (url.contains(".m3u8")) "application/vnd.apple.mpegurl" else "video/*")
+                setMimeType(when {
+                    url.contains(".m3u8") -> "application/vnd.apple.mpegurl"
+                    url.contains(".mpd") -> "application/dash+xml"
+                    else -> "video/*"
+                })
                 addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url))
                 setTitle(nomFichier)
                 setDescription("Téléchargement en cours...")
                 setAllowedOverMetered(true)
-                setAllowedOverRoaming(true)
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
                 setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomFichier)
                 allowScanningByMediaScanner()
@@ -401,36 +394,37 @@ class MainActivity : AppCompatActivity() {
                 }
             }
 
-            // 🎬 DÉTECTION HLS EN PRIORITÉ — .m3u8 d'abord
-            for (hls in MOTIFS_HLS) {
-                if (urlMin.contains(hls)) {
-                    if (urlHlsDetectee == null) {
+            // 🎬 DÉTECTION HLS EN PRIORITÉ
+            if (urlHlsDetectee == null) {
+                for (hls in MOTIFS_HLS) {
+                    if (urlMin.contains(hls)) {
                         urlHlsDetectee = url
                         runOnUiThread { dlButton.visibility = View.VISIBLE }
                         Log.d(TAG, "🎬 HLS DÉTECTÉ: $url")
+                        return super.shouldInterceptRequest(v, rq)
                     }
-                    break
                 }
             }
 
-            // 🎬 DÉTECTION VIDÉO AUTRES FORMATS
+            // 🎬 DÉTECTION VIDÉO PAR URL DIRECTE
             if (urlVideoDetectee == null && urlHlsDetectee == null) {
                 for (ext in EXT_VIDEO) {
                     if (urlMin.contains(ext)) {
                         urlVideoDetectee = url
                         runOnUiThread { dlButton.visibility = View.VISIBLE }
                         Log.d(TAG, "🎬 VIDÉO DÉTECTÉE: $url")
-                        break
+                        return super.shouldInterceptRequest(v, rq)
                     }
                 }
             }
 
-            // 🎬 DÉTECTION PAR HÉBERGEUR
-            if (urlVideoDetectee == null && urlHlsDetectee == null) {
+            // 🎬 DÉTECTION PAR HÉBERGEUR / SITE DE STREAMING
+            if (premiereDetection && urlVideoDetectee == null && urlHlsDetectee == null) {
                 for (hote in HOSTS_VIDEO) {
                     if (urlMin.contains(hote)) {
-                        urlVideoDetectee = url
+                        premiereDetection = false
                         runOnUiThread { dlButton.visibility = View.VISIBLE }
+                        Log.d(TAG, "🎬 SITE VIDÉO DÉTECTÉ: $hote → Recherche sources...")
                         break
                     }
                 }
@@ -439,15 +433,46 @@ class MainActivity : AppCompatActivity() {
             return super.shouldInterceptRequest(v, rq)
         }
 
+        override fun onPageFinished(v: WebView?, url: String?) {
+            enChargement.set(false)
+
+            // 🎬 INJECTION JAVASCRIPT — DÉTECTE VIDÉOS CACHÉES DANS JWPLAYER / SCRIPTS
+            url?.let {
+                val jsRechercheVideo = """
+                    (function() {
+                        setTimeout(function() {
+                            // 1. Balises <video> directes
+                            var videos = document.querySelectorAll('video');
+                            for (var i = 0; i < videos.length; i++) {
+                                var src = videos[i].src || (videos[i].querySelector('source') ? videos[i].querySelector('source').src : '');
+                                if (src && (src.includes('.m3u8') || src.includes('.mp4') || src.includes('.m3u8') || src.includes('blob:'))) {
+                                    window.VIPER_VIDEO_SRC = src;
+                                    console.log('VIPER-VIDEO:', src);
+                                }
+                            }
+                            // 2. Liens vers .m3u8 / .mp4 dans la page
+                            var tousLiens = document.querySelectorAll('a[href*=".m3u8"], a[href*=".mp4"], a[href*=".mpd"], a[href*="/hls/"]');
+                            for (var j = 0; j < tousLiens.length; j++) {
+                                var l = tousLiens[j].href;
+                                if (l) { window.VIPER_VIDEO_SRC = l; }
+                            }
+                        }, 800);
+                    })();
+                """.trimIndent()
+                v?.evaluateJavascript(jsRechercheVideo) { resultat ->
+                    Log.d(TAG, "JS Recherche vidéo: $resultat")
+                }
+            }
+        }
+
         override fun onPageStarted(v: WebView?, u: String?, ic: android.graphics.Bitmap?) {
             enChargement.set(true)
             urlVideoDetectee = null
             urlHlsDetectee = null
+            premiereDetection = true
             runOnUiThread { dlButton.visibility = View.GONE }
             u?.let { urlInput.setText(it) }
         }
-
-        override fun onPageFinished(v: WebView?, u: String?) { enChargement.set(false) }
 
         override fun shouldOverrideUrlLoading(v: WebView?, rq: WebResourceRequest?): Boolean {
             val u = rq?.url.toString()
