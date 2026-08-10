@@ -1,13 +1,15 @@
 package com.viperbrowser
 
-import android.os.Bundle
+import android.Manifest
+import android.app.DownloadManager
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
+import android.os.Bundle
+import android.os.Environment
 import android.util.Log
-import android.view.KeyEvent
-import android.view.inputmethod.EditorInfo
-import android.widget.EditText
-import android.widget.Button
-import android.widget.Toast
+import android.view.View
 import android.webkit.CookieManager
 import android.webkit.URLUtil
 import android.webkit.WebResourceRequest
@@ -15,28 +17,36 @@ import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import java.io.ByteArrayInputStream
-import java.util.concurrent.atomic.AtomicBoolean
 import java.util.Locale
+import java.util.concurrent.atomic.AtomicBoolean
 
 class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val TAG = "ViperBrowser"
         private const val MOTEUR_RECHERCHE = "https://www.google.com/search?q="
+        private val EXT_VIDEO = listOf(".mp4", ".m3u8", ".webm", ".avi", ".mov", ".mkv", ".flv", ".mpd")
+        private val HOSTS_VIDEO = listOf("youtube.com", "vimeo.com", "dailymotion.com", "twitch.tv", "video", "watch", "player")
+        private const val PERM_STOCKAGE = 12345
     }
 
     private lateinit var webView: WebView
     private lateinit var urlInput: EditText
+    private lateinit var dlButton: Button
     private val enChargement = AtomicBoolean(false)
-    private var derniereUrl = ""
+    private var urlVideoDetectee: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         try {
             super.onCreate(savedInstanceState)
 
-            // ✅ Initialisation WebView EN PREMIER pour Xiaomi
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
                 WebView.setWebContentsDebuggingEnabled(false)
             }
@@ -44,112 +54,215 @@ class MainActivity : AppCompatActivity() {
             setContentView(R.layout.activity_main)
 
             urlInput = findViewById(R.id.urlInput)
+            dlButton = findViewById(R.id.dlButton)
             webView = findViewById(R.id.webView)
 
-            configurerWebView()
-            configurerBarreUrl()
+            // ✅ BARRE D'ADRESSE VIDE AU DÉMARRAGE — RIEN AFFICHÉ
+            urlInput.text.clear()
+            urlInput.hint = "Rechercher ou entrer une URL..."
 
-            urlInput.setText("")
+            verifierPermissions()
+            configurerWebView()
+            configurerBoutons()
+
+            // ✅ PAGE VIDE SANS CHARGER GOOGLE AU DÉMARRAGE
             webView.loadUrl("about:blank")
 
-            Log.d(TAG, "✅ Prêt — Barre URL optimisée")
+            Log.d(TAG, "✅ PRÊT — Barre vide + Vitesse max + Vidéo OK")
 
         } catch (e: Exception) {
             Toast.makeText(this, "ERREUR: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
-    private fun configurerBarreUrl() {
-        val bouton = findViewById<Button>(R.id.goButton)
-
-        // Bouton → charger instantanément
-        bouton.setOnClickListener { if (!enChargement.get()) chargerOuRechercher() }
-
-        // Touche Entrée du clavier → charger
-        urlInput.setOnEditorActionListener { _, actionId, _ ->
-            if (actionId == EditorInfo.IME_ACTION_GO || actionId == EditorInfo.IME_ACTION_DONE) {
-                if (!enChargement.get()) chargerOuRechercher()
-                true
-            } else false
-        }
-
-        // Touche Entrée physique
-        urlInput.setOnKeyListener { _, code, event ->
-            if (code == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN && !enChargement.get()) {
-                chargerOuRechercher()
-                true
-            } else false
+    private fun verifierPermissions() {
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this,
+                    arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE),
+                    PERM_STOCKAGE)
+            }
         }
     }
 
-    // ⚡ DÉTECTION INTELLIGENTE : URL ou RECHERCHE
-    private fun chargerOuRechercher() {
-        var saisie = urlInput.text.toString().trim()
-        if (saisie.isBlank()) return
-
-        // Nettoyage
-        saisie = saisie.replace("\\s+".toRegex(), " ")
-
-        val urlFinale = quandEstCeUneUrl(saisie) ?: "${MOTEUR_RECHERCHE}${saisie.replace(" ", "+")}"
-
-        derniereUrl = urlFinale
-        webView.loadUrl(urlFinale)
-
-        // Masquer clavier immédiatement
-        urlInput.clearFocus()
-        val clavier = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
-        clavier.hideSoftInputFromWindow(urlInput.windowToken, 0)
-    }
-
-    // 🔍 DÉTECTION URL EN 1 MICROSECONDE
-    private fun quandEstCeUneUrl(s: String): String? {
-        val u = s.trim().lowercase(Locale.ROOT)
-
-        // Cas 1 : Protocole explicite
-        if (u.startsWith("http://") || u.startsWith("https://") || u.startsWith("www.")) {
-            return if (u.startsWith("www.")) "https://$s" else s
-        }
-
-        // Cas 2 : Domaine connu avec extension
-        val domaines = listOf(".com", ".fr", ".net", ".org", ".io", ".app", ".dev", ".edu", ".gov", ".uk", ".de", ".es", ".it", ".ca")
-        for (ext in domaines) if (u.contains(ext)) return "https://$s"
-
-        // Cas 3 : contient un point sans espace = probablement une URL
-        if (u.contains(".") && !u.contains(" ")) return "https://$s"
-
-        return null // → Recherche
-    }
-
+    // ⚡ TOUS LES PARAMÈTRES POUR VITESSE MAX + VIDÉOS LISIBLES
     private fun configurerWebView() {
         val r = webView.settings
 
-        // ⚡ VITESSE MAX
-        r.cacheMode = WebSettings.LOAD_CACHE_ELSE_NETWORK
+        // ⚡ VITESSE MAX — D'ABORD CACHE PUIS RÉSEAU
+        r.cacheMode = WebSettings.LOAD_DEFAULT
         r.domStorageEnabled = true
+        r.databaseEnabled = false
+        r.setAppCacheEnabled(true)
+        r.appCachePath = cacheDir.absolutePath
+
+        // 🎬 VIDÉOS — TOUS LES RÉGLAGES POUR LIRE SANS PROBLÈME
         r.javaScriptEnabled = true
         r.loadsImagesAutomatically = true
-        r.defaultTextEncodingName = "UTF-8"
+        r.mediaPlaybackRequiresUserGesture = false
+        r.javaScriptCanOpenWindowsAutomatically = true
+        r.setPluginState(WebSettings.PluginState.ON)
+        r.domStorageEnabled = true
+
+        // 📋 COMPATIBILITÉ SITES — AGENT UTILISATEUR STANDARD
+        r.userAgentString = "Mozilla/5.0 (Linux; Android ${Build.VERSION.RELEASE}; Mobile) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36"
+
+        // 📐 MISE EN PAGE — S'AFFICHE BIEN SUR TOUS LES SITES
         r.useWideViewPort = true
         r.loadWithOverviewMode = true
         r.layoutAlgorithm = WebSettings.LayoutAlgorithm.NARROW_COLUMNS
         r.minimumFontSize = 8
+        r.defaultFontSize = 16
+
+        // 🔍 ZOOM
         r.setSupportZoom(true)
         r.builtInZoomControls = true
         r.displayZoomControls = false
 
-        // 🔒 SÉCURITÉ
+        // 🔒 SÉCURITÉ + COMPATIBILITÉ
         r.allowFileAccess = false
         r.allowContentAccess = false
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) r.setGeolocationEnabled(false)
+        r.allowUniversalAccessFromFileURLs = false
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            r.setGeolocationEnabled(false)
+        }
 
-        // 🎨 RENDU FLUIDE
+        // 🎨 ACCÉLÉRATION GRAPHIQUE — VIDÉOS FLUIDES
         webView.setLayerType(WebView.LAYER_TYPE_HARDWARE, null)
         webView.overScrollMode = android.view.View.OVER_SCROLL_NEVER
         webView.isHorizontalScrollBarEnabled = false
         webView.isVerticalScrollBarEnabled = false
 
-        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, false)
+        // 🍪 COOKIES — SITES SE CHARGENT BIEN
+        CookieManager.getInstance().setAcceptCookie(true)
+        CookieManager.getInstance().setAcceptThirdPartyCookies(webView, true)
+
         webView.webViewClient = ClientWeb()
+    }
+
+    private fun configurerBoutons() {
+        findViewById<Button>(R.id.goButton).setOnClickListener {
+            if (!enChargement.get()) chargerOuRechercher()
+        }
+
+        dlButton.setOnClickListener {
+            urlVideoDetectee?.let { lancerTelechargement(it) }
+                ?: Toast.makeText(this, "Aucune vidéo détectée", Toast.LENGTH_SHORT).show()
+        }
+
+        urlInput.setOnEditorActionListener { _, actionId, _ ->
+            if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_GO) {
+                if (!enChargement.get()) chargerOuRechercher()
+                true
+            } else false
+        }
+    }
+
+    private fun chargerOuRechercher() {
+        var saisie = urlInput.text.toString().trim()
+        if (saisie.isBlank()) return
+
+        saisie = saisie.replace("\\s+".toRegex(), " ")
+        val urlFinale = quandEstCeUneUrl(saisie) ?: "${MOTEUR_RECHERCHE}${saisie.replace(" ", "+")}"
+
+        urlVideoDetectee = null
+        dlButton.visibility = View.GONE
+        webView.loadUrl(urlFinale)
+
+        urlInput.clearFocus()
+        val clavier = getSystemService(INPUT_METHOD_SERVICE) as android.view.inputmethod.InputMethodManager
+        clavier.hideSoftInputFromWindow(urlInput.windowToken, 0)
+    }
+
+    private fun quandEstCeUneUrl(s: String): String? {
+        val u = s.trim().lowercase(Locale.ROOT)
+        if (u.startsWith("http://") || u.startsWith("https://")) return s
+        if (u.startsWith("www.")) return "https://$s"
+        val domaines = listOf(".com", ".fr", ".net", ".org", ".io", ".app", ".dev", ".edu", ".gov", ".uk", ".de", ".es", ".it")
+        for (ext in domaines) if (u.contains(ext)) return "https://$s"
+        if (u.contains(".") && !u.contains(" ")) return "https://$s"
+        return null
+    }
+
+    private fun lancerTelechargement(url: String) {
+        try {
+            val uri = Uri.parse(url)
+            val nomFichier = URLUtil.guessFileName(url, null, "video/mp4")
+
+            val requete = DownloadManager.Request(uri).apply {
+                setMimeType("video/*")
+                addRequestHeader("Cookie", CookieManager.getInstance().getCookie(url))
+                setTitle(nomFichier)
+                setDescription("Téléchargement ViperBrowser")
+                setAllowedOverMetered(true)
+                setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+                setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, nomFichier)
+            }
+
+            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(requete)
+            Toast.makeText(this, "⬇ Téléchargement démarré", Toast.LENGTH_LONG).show()
+
+        } catch (e: Exception) {
+            Toast.makeText(this, "Erreur: ${e.message}", Toast.LENGTH_LONG).show()
+        }
+    }
+
+    private inner class ClientWeb : WebViewClient() {
+        private val BLOQUER = listOf(
+            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
+            "googletagmanager.com", "amazon-adsystem.com", "adform.net",
+            "adroll.com", "ads.", "ad.", "banner.", "popup.", "affiliate.",
+            "google-analytics.com", "analytics.", "gtag.", "ga.js", "gtm.js",
+            "beacon.", "tracking.", "track.", "utm_", "gclid=", "fbclid="
+        )
+
+        override fun shouldInterceptRequest(v: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
+            val url = rq?.url.toString()
+            val urlMin = url.lowercase(Locale.ROOT)
+
+            // 🎬 DÉTECTION VIDÉO
+            for (ext in EXT_VIDEO) {
+                if (urlMin.contains(ext)) {
+                    urlVideoDetectee = url
+                    runOnUiThread { dlButton.visibility = View.VISIBLE }
+                    break
+                }
+            }
+            if (urlVideoDetectee == null) {
+                for (hote in HOSTS_VIDEO) {
+                    if (urlMin.contains(hote)) {
+                        urlVideoDetectee = url
+                        runOnUiThread { dlButton.visibility = View.VISIBLE }
+                        break
+                    }
+                }
+            }
+
+            // 🚫 BLOCAGE PUBLICITÉ
+            for (pub in BLOQUER) {
+                if (urlMin.contains(pub)) {
+                    return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
+                }
+            }
+            return super.shouldInterceptRequest(v, rq)
+        }
+
+        override fun onPageStarted(v: WebView?, u: String?, ic: android.graphics.Bitmap?) {
+            enChargement.set(true)
+            urlVideoDetectee = null
+            runOnUiThread { dlButton.visibility = View.GONE }
+            u?.let { urlInput.setText(it) }
+        }
+
+        override fun onPageFinished(v: WebView?, u: String?) { enChargement.set(false) }
+
+        override fun shouldOverrideUrlLoading(v: WebView?, rq: WebResourceRequest?): Boolean {
+            val u = rq?.url.toString()
+            if (u.startsWith("http")) v?.loadUrl(u)
+            return true
+        }
     }
 
     override fun onBackPressed() {
@@ -160,32 +273,10 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() { super.onResume(); webView.onResume() }
     override fun onDestroy() { webView.clearCache(true); webView.destroy(); super.onDestroy() }
 
-    private inner class ClientWeb : WebViewClient() {
-        private val BLOQUER = listOf(
-            "doubleclick.net", "googleadservices.com", "googlesyndication.com",
-            "googletagmanager.com", "amazon-adsystem.com", "adform.net",
-            "adroll.com", "ads.", "ad.", "banner.", "popup.", "affiliate.",
-            "google-analytics.com", "analytics.", "gtag.", "ga.js", "gtm.js",
-            "hotjar.com", "segment.com", "mixpanel.com", "amplitude.com",
-            "chartbeat.com", "quantserve.com", "scorecardresearch.com",
-            "connect.facebook.net", "fbq.", "pixel.", "ads.x.com",
-            "beacon.", "tracking.", "track.", "stats.", "metrics.", "telemetry.",
-            "utm_", "source=", "campaign=", "gclid=", "fbclid="
-        )
-        override fun shouldInterceptRequest(v: WebView?, rq: WebResourceRequest?): WebResourceResponse? {
-            val u = rq?.url.toString().lowercase()
-            for (h in BLOQUER) if (u.contains(h))
-                return WebResourceResponse("text/plain", "UTF-8", ByteArrayInputStream("".toByteArray()))
-            return super.shouldInterceptRequest(v, rq)
-        }
-        override fun onPageStarted(v: WebView?, u: String?, ic: android.graphics.Bitmap?) {
-            enChargement.set(true); u?.let { urlInput.setText(it) }
-        }
-        override fun onPageFinished(v: WebView?, u: String?) { enChargement.set(false) }
-        override fun shouldOverrideUrlLoading(v: WebView?, rq: WebResourceRequest?): Boolean {
-            val u = rq?.url.toString()
-            if (u.startsWith("http")) v?.loadUrl(u)
-            return true
+    override fun onRequestPermissionsResult(code: Int, liste: Array<out String>, resultat: IntArray) {
+        super.onRequestPermissionsResult(code, liste, resultat)
+        if (code == PERM_STOCKAGE && resultat.isNotEmpty() && resultat[0] == PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "✅ Permissions OK", Toast.LENGTH_SHORT).show()
         }
     }
 }
