@@ -2,7 +2,6 @@ package com.viperbrowser
 
 import android.app.DownloadManager
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.os.Environment
@@ -27,7 +26,6 @@ import java.io.ByteArrayInputStream
 import java.net.URL
 import java.util.HashSet
 import java.util.Locale
-import java.util.regex.Pattern
 
 class MainActivity : AppCompatActivity() {
 
@@ -37,7 +35,7 @@ class MainActivity : AppCompatActivity() {
         private const val LISTE_BLOCAGE = "https://raw.githubusercontent.com/thibautfihey49-hue/ViperBrowser/main/blocklist.txt"
 
         // ==============================================
-        // 🛡️ BLOCAGE — RÈGLES TOUJOURS ACTIVES (pas besoin de liste distante)
+        // 🛡️ BLOCAGE — RÈGLES LOCALES
         // ==============================================
         private val REGLES_BLOCAGE = setOf(
             // PUBS VIDÉO
@@ -54,6 +52,9 @@ class MainActivity : AppCompatActivity() {
             "media.net", "adthrive.", "casalemedia.", "sharethrough.", "admixer.",
             "telaria.", "tremorvideo.", "xandr.", "zemanta.", "zedo.",
 
+            // ❌ DOMAINE DE PUBS DÉTECTÉ
+            "livejasmin.", "crmrc.livejasmin.",
+
             // SCRIPTS PUBS
             "adsbygoogle.js", "pagead2.", "show_ads.js", "adframe.js",
             "/ad.", "/ads.", "/advert.", "/banner.", "/popup.", "/sponsor.",
@@ -69,12 +70,21 @@ class MainActivity : AppCompatActivity() {
             "pagead=", "google_ad", "fb_event=", "analytics_id=", "utm_source="
         )
 
-        // 🎬 MOTIFS DÉTECTION VIDÉO
-        private val MOTIFS_VIDEO = listOf(
-            "video/", "mp4", "webm", "m3u8", "blob:http", ".mp4", ".webm", ".m3u8",
-            "/video/", "/watch/", "/embed/", "videoplayback", "googlevideo",
+        // 🎬 FORMATS VIDÉO SEULEMENT — PRÉCIS
+        private val EXTENSIONS_VIDEO = setOf(
+            ".mp4", ".webm", ".m3u8", ".m4v", ".mov", ".avi", ".mkv", ".flv", ".ts"
+        )
+
+        // 🎬 MOTIFS SITES DE VIDÉO
+        private val MOTIFS_SITE_VIDEO = listOf(
             "youtube.com/watch", "youtu.be/", "vimeo.com/", "dailymotion.com/",
-            "cdn.bilibili.com", "video-file", "media-video", "stream/video"
+            "videoplayback", "googlevideo", "/video/", "/watch/", "/embed/",
+            "cdn.bilibili.com", "stream/video", "video-file", "media-video"
+        )
+
+        // ❌ FORMATS À IGNORER (PAS DES VIDÉOS)
+        private val EXTENSIONS_A_IGNORER = setOf(
+            ".gif", ".jpg", ".jpeg", ".png", ".webp", ".css", ".js", ".html", ".htm"
         )
     }
 
@@ -92,13 +102,10 @@ class MainActivity : AppCompatActivity() {
         urlBar = findViewById(R.id.urlBar)
         progressBar = findViewById(R.id.progressBar)
 
-        // ✅ Charge d'abord les règles locales GARANTIES
         reglesActives.addAll(REGLES_BLOCAGE)
         Log.d(TAG, "🛡️ Règles locales chargées : ${reglesActives.size}")
 
-        // 🚀 Tente de charger la liste complète en plus
         chargerListeDistante()
-
         configurerWebView()
         configurerBoutons()
         webView.loadUrl("https://www.google.com")
@@ -117,7 +124,7 @@ class MainActivity : AppCompatActivity() {
                 }
                 Log.d(TAG, "✅ Liste distante : +$ajoutees règles — Total : ${reglesActives.size}")
             } catch (e: Exception) {
-                Log.w(TAG, "⚠️ Liste distante indisponible — utilisation règles locales uniquement")
+                Log.w(TAG, "⚠️ Liste distante indisponible — règles locales uniquement")
             }
         }
     }
@@ -150,7 +157,7 @@ class MainActivity : AppCompatActivity() {
                         ByteArrayInputStream(byteArrayOf()))
                 }
 
-                // 🎬 DÉTECTION VIDÉO
+                // 🎬 DÉTECTION VIDÉO — UNIQUEMENT SI VRAI FORMAT VIDÉO
                 if (estVideo(url)) {
                     Log.d(TAG, "🎬 VIDÉO DÉTECTÉE : $url")
                     proposerTelechargement(url)
@@ -181,16 +188,29 @@ class MainActivity : AppCompatActivity() {
 
     private fun estVideo(url: String): Boolean {
         val u = url.lowercase(Locale.ROOT)
-        for (motif in MOTIFS_VIDEO) {
+
+        // ❌ EXCLURE LES IMAGES ET FICHIERS NON VIDÉO
+        for (ext in EXTENSIONS_A_IGNORER) {
+            if (u.endsWith(ext) || u.contains("$ext?")) return false
+        }
+
+        // ✅ VÉRIFIER LES EXTENSIONS VIDÉO
+        for (ext in EXTENSIONS_VIDEO) {
+            if (u.endsWith(ext) || u.contains("$ext?")) return true
+        }
+
+        // ✅ VÉRIFIER LES SITES DE VIDÉO
+        for (motif in MOTIFS_SITE_VIDEO) {
             if (u.contains(motif)) return true
         }
+
         return false
     }
 
     private fun proposerTelechargement(url: String) {
         val nomFichier = URLUtil.guessFileName(url, null, null)
         CoroutineScope(Dispatchers.Main).launch {
-            Toast.makeText(this@MainActivity, "🎬 Vidéo détectée — Téléchargement : $nomFichier", Toast.LENGTH_LONG).show()
+            Toast.makeText(this@MainActivity, "🎬 Vidéo détectée — $nomFichier", Toast.LENGTH_LONG).show()
             lancerTelechargement(url, nomFichier)
         }
     }
@@ -199,7 +219,7 @@ class MainActivity : AppCompatActivity() {
         try {
             val uri = Uri.parse(url)
             val req = DownloadManager.Request(uri).apply {
-                setTitle("Téléchargement vidéo")
+                setTitle("Vidéo")
                 setDescription(nomFichier)
                 setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
                 setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
